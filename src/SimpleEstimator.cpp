@@ -1,6 +1,11 @@
 //
 // Created by Nikolay Yakovets on 2018-02-01.
 //
+// Mark:
+// See chapter 13.3 of the book for details:
+// Create a histogram, evaluate each query
+// for its opperations and implement the given
+// calculations of the book.
 
 #include "SimpleGraph.h"
 #include "SimpleEstimator.h"
@@ -20,6 +25,12 @@ void SimpleEstimator::prepare() {
 cardStat SimpleEstimator::estimate(RPQTree *q) {
 
     // perform your estimation here
+    std::cout<< std::endl;
+    std::cout << "testing left: ";
+    q->left->print();
+    std::cout<< std::endl;
+    std::cout << "testing right: ";
+    q->right->print();
 
     return cardStat {0, 0, 0};
 }
