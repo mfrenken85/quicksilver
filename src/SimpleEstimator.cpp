@@ -102,9 +102,7 @@ cardStat SimpleEstimator::computeStats() {
     return stats;
 }
 
-<<<<<<< HEAD
 std::shared_ptr<SimpleGraph> SimpleEstimator::calculate(uint32_t cl, bool inverse ,std::shared_ptr<SimpleGraph> &in) {
-
     if(previousLabel!=-1){
 
         std::vector<std::pair<uint32_t,uint32_t>> current;
@@ -168,16 +166,6 @@ std::shared_ptr<SimpleGraph> SimpleEstimator::join(std::shared_ptr<SimpleGraph> 
             int leftTarget = labelTarget.second;
             // try to join the left target with right source
             for (auto rightLabelTarget : right->adj[leftTarget]) {
-=======
-    // perform your estimation here
-    std::cout<< std::endl;
-    std::cout << "testing left: ";
-    q->left->print();
-    std::cout<< std::endl;
-    std::cout << "testing right: ";
-    q->right->print();
->>>>>>> e7ee6c05043230a2f59df0ddc7d7d083a58802e3
-
                 auto rightTarget = rightLabelTarget.second;
                 out->addEdge(leftSource, rightTarget, 0);
             }
