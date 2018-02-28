@@ -24,6 +24,23 @@ SimpleEstimator::SimpleEstimator(std::shared_ptr<SimpleGraph> &g){
 void SimpleEstimator::prepare() {
 
     // do your prep here
+    /*
+     * nr,the number of tuples in the relation r.
+     * br,the number of blocks containing tuples of relation r.
+     * lr,the size of a tuple of relation r in bytes.
+     * fr , the blocking factor of relation r —
+     *   that is, the number of tuples of relation r that fit into one block.
+     * V(A,r),the number of distinct values that appear in the relation r for attribute A.
+     *   This value is the same as the size of A(r).If A is a key for relation r,V(A,r) is nr .
+     */
+
+    auto nr = graph->getNoEdges();
+    auto V = graph->getNoVertices();
+    std::cout<< std::endl;
+    std::cout << "no of tuples in relation: " << nr;
+    std::cout<< std::endl;
+    std::cout << "no of V in relation: " << V;
+    std::cout<< std::endl;
 
     for(int i = 0; i < graph->getNoVertices(); i++) {
         if (!graph->adj[i].empty()){
@@ -98,11 +115,15 @@ cardStat SimpleEstimator::computeStats() {
     return stats;
 }
 
+<<<<<<< HEAD
 //std::shared_ptr<SimpleGraph> SimpleEstimator::calculate(uint32_t cl, bool inverse ,std::shared_ptr<SimpleGraph> &in) {
 void SimpleEstimator::calculate(uint32_t cl, bool inverse) {
 
     // std::cout << "current Label: " << cl << std::endl;
 
+=======
+std::shared_ptr<SimpleGraph> SimpleEstimator::calculate(uint32_t cl, bool inverse ,std::shared_ptr<SimpleGraph> &in) {
+>>>>>>> 1608423f5a9a5d2402b8a0cf078b81406d18ffeb
     if(previousLabel!=-1){
 
         std::vector<std::pair<uint32_t,uint32_t>> current;
@@ -176,7 +197,10 @@ std::shared_ptr<SimpleGraph> SimpleEstimator::join(std::shared_ptr<SimpleGraph> 
             int leftTarget = labelTarget.second;
             // try to join the left target with right source
             for (auto rightLabelTarget : right->adj[leftTarget]) {
+<<<<<<< HEAD
 
+=======
+>>>>>>> 1608423f5a9a5d2402b8a0cf078b81406d18ffeb
                 auto rightTarget = rightLabelTarget.second;
                 out->addEdge(leftSource, rightTarget, 0);
 
@@ -240,7 +264,7 @@ cardStat SimpleEstimator::estimate(RPQTree *query) {
     previousLabel = -1;
 
     // perform your estimation here
-    estimator_aux(query);
+    //estimator_aux(query);
     return SimpleEstimator::computeStats();
     // return cardStat {0, 0, 0};
 }
