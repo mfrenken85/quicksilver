@@ -25,11 +25,6 @@ void SimpleEstimator::prepare() {
 
     // do your prep here
 
-    noIn = 0;
-    noOut = 0;
-    noPaths = 0;
-    previousLabel = -1;
-
     for(int i = 0; i < graph->getNoVertices(); i++) {
         if (!graph->adj[i].empty()){
             for (int j = 0; j < graph->adj[i].size(); j++ ) {
@@ -41,6 +36,7 @@ void SimpleEstimator::prepare() {
                     if(labelcounter[k].first == label){
                         found = true;
                         labelcounter[k].second ++;
+                        break;
                     }
                 }
                 // otherwise add that new label into the list.
@@ -54,6 +50,7 @@ void SimpleEstimator::prepare() {
                     if(groupededges[k].first == label){
                         found = true;
                         groupededges[k].second.emplace_back(std::make_pair(i,graph->adj[i][j].second));
+                        break;
                     }
                 }
                 // otherwise add that new label into the list.
@@ -61,6 +58,22 @@ void SimpleEstimator::prepare() {
                     std::vector<std::pair<uint32_t,uint32_t>> v;
                     v.emplace_back(std::make_pair (i,graph->adj[i][j].second));
                     groupededges.emplace_back( std::make_pair(label ,v) );
+                }
+
+                // increase the counter if the label is already in the list.
+                found = false;
+                for (int k = 0; k < groupededgesinverse.size(); k++) {
+                    if(groupededgesinverse[k].first == label){
+                        found = true;
+                        groupededgesinverse[k].second.emplace_back(std::make_pair(graph->adj[i][j].second, i));
+                        break;
+                    }
+                }
+                // otherwise add that new label into the list.
+                if(!found) {
+                    std::vector<std::pair<uint32_t,uint32_t>> v;
+                    v.emplace_back(std::make_pair (graph->adj[i][j].second, i));
+                    groupededgesinverse.emplace_back( std::make_pair(label ,v) );
                 }
             }
         }
@@ -71,9 +84,9 @@ void SimpleEstimator::prepare() {
     }
     for (int i = 0; i < groupededges.size(); i++) {
         std::cout << "label: " << groupededges[i].first  << " encountered times: " << groupededges[i].second.size() << std::endl;
-        //for (int j = 0; j < groupededges[i].second.size(); ++j) {
-        //    std::cout << "left: " << groupededges[i].second[j].first  << " right: " << groupededges[i].second[j].second << std::endl;
-        //}
+    }
+    for (int i = 0; i < groupededgesinverse.size(); i++) {
+        std::cout << "label: " << groupededgesinverse[i].first  << " encountered times: " << groupededgesinverse[i].second.size() << std::endl;
     }
 }
 
@@ -85,59 +98,71 @@ cardStat SimpleEstimator::computeStats() {
     return stats;
 }
 
-<<<<<<< HEAD
-std::shared_ptr<SimpleGraph> SimpleEstimator::calculate(uint32_t cl, bool inverse ,std::shared_ptr<SimpleGraph> &in) {
+//std::shared_ptr<SimpleGraph> SimpleEstimator::calculate(uint32_t cl, bool inverse ,std::shared_ptr<SimpleGraph> &in) {
+void SimpleEstimator::calculate(uint32_t cl, bool inverse) {
+
+    // std::cout << "current Label: " << cl << std::endl;
 
     if(previousLabel!=-1){
 
         std::vector<std::pair<uint32_t,uint32_t>> current;
         std::vector<std::pair<uint32_t,uint32_t>> previous;
-        for (int i = 0; i < groupededges.size(); i++) {
-            if(groupededges[i].first==previousLabel){
-                previous = groupededges[i].second;
+        if(!inverse) {
+            for (int i = 0; i < groupededges.size(); i++) {
+                if (groupededges[i].first == previousLabel) {
+                    previous = groupededges[i].second;
+                }
+                if (groupededges[i].first == cl) {
+                    current = groupededges[i].second;
+                }
             }
-            if(groupededges[i].first==cl){
-                current = groupededges[i].second;
+        }
+        else{
+            for (int i = 0; i < groupededgesinverse.size(); i++) {
+                if (groupededgesinverse[i].first == previousLabel) {
+                    previous = groupededgesinverse[i].second;
+                }
+                if (groupededgesinverse[i].first == cl) {
+                    current = groupededgesinverse[i].second;
+                }
             }
         }
 
         std::vector<uint32_t> r;
         std::vector<uint32_t> s;
-        if(!inverse){
-            for (int i = 0; i < current.size(); i++) {
-                s.emplace_back(current[i].first);
-            }
-            for (int i = 0; i < previous.size(); i++) {
-                r.emplace_back(previous[i].second);
-            }
+        for (int i = 0; i < current.size(); i++) {
+            s.emplace_back(current[i].first);
         }
-        else{
-            for (int i = 0; i < current.size(); i++) {
-                s.emplace_back(current[i].second);
-            }
-            for (int i = 0; i < previous.size(); i++) {
-                r.emplace_back(previous[i].first);
-            }
+        for (int i = 0; i < previous.size(); i++) {
+            r.emplace_back(previous[i].second);
         }
 
+        // calculate intersection.
         std::vector<uint32_t> intersection;
-        for (int i = 0; i < r.size(); ++i) {
-            for (int j = 0; j < s.size(); ++j) {
-                if(r[i]==s[j]){
-                    intersection.emplace_back(s[j]);
-                }
-            }
-        }
+        std::sort(r.begin(), r.end());
+        std::sort(s.begin(), s.end());
+        std::set_intersection(r.begin(),r.end(),s.begin(),s.end(),back_inserter(intersection));
 
         if(intersection.size()!=0) {
+            std::sort( intersection.begin(), intersection.end() );
+            intersection.erase( std::unique( intersection.begin(), intersection.end() ), intersection.end() );
+            //noPaths = previous.size();
+            //noPaths = noPaths * current.size() / intersection.size();
             uint32_t paths = current.size() * previous.size() / intersection.size();
-            noPaths *= paths;
-            std::cout << "# of intersection vertices: " << intersection.size() << std::endl;
+            noPaths += paths;
+            std::cout << "# of Distinct intersection vertices: " << intersection.size() << std::endl;
+        } else{
+            std::cout << "previous Label: " << previousLabel << std::endl;
+            std::cout << "current Label: " << cl << std::endl;
+            bool stop = true;
         }
+
+        noIn += intersection.size();
+        noOut += intersection.size();
     }
 
     previousLabel = cl;
-    return  in;
+    // return  in;
 }
 
 std::shared_ptr<SimpleGraph> SimpleEstimator::join(std::shared_ptr<SimpleGraph> &left, std::shared_ptr<SimpleGraph> &right) {
@@ -151,26 +176,18 @@ std::shared_ptr<SimpleGraph> SimpleEstimator::join(std::shared_ptr<SimpleGraph> 
             int leftTarget = labelTarget.second;
             // try to join the left target with right source
             for (auto rightLabelTarget : right->adj[leftTarget]) {
-=======
-    // perform your estimation here
-    std::cout<< std::endl;
-    std::cout << "testing left: ";
-    q->left->print();
-    std::cout<< std::endl;
-    std::cout << "testing right: ";
-    q->right->print();
->>>>>>> e7ee6c05043230a2f59df0ddc7d7d083a58802e3
 
                 auto rightTarget = rightLabelTarget.second;
                 out->addEdge(leftSource, rightTarget, 0);
+
             }
         }
     }
 
     return out;
 }
-
-std::shared_ptr<SimpleGraph> SimpleEstimator::estimator_aux(RPQTree *q) {
+/*std::shared_ptr<SimpleGraph>*/
+void  SimpleEstimator::estimator_aux(RPQTree *q) {
 
     // evaluate according to the AST bottom-up
 
@@ -192,26 +209,35 @@ std::shared_ptr<SimpleGraph> SimpleEstimator::estimator_aux(RPQTree *q) {
             inverse = true;
         } else {
             std::cerr << "Label parsing failed!" << std::endl;
-            return nullptr;
+            //return nullptr;
         }
-        return SimpleEstimator::calculate(label, inverse, graph);
+        // return SimpleEstimator::calculate(label, inverse, graph);
+        SimpleEstimator::calculate(label, inverse);
     }
 
     if(q->isConcat()) {
 
         // evaluate the children
-        auto leftGraph = SimpleEstimator::estimator_aux(q->left);
-        auto rightGraph = SimpleEstimator::estimator_aux(q->right);
+        //auto leftGraph = SimpleEstimator::estimator_aux(q->left);
+        //auto rightGraph = SimpleEstimator::estimator_aux(q->right);
+
+        SimpleEstimator::estimator_aux(q->left);
+        SimpleEstimator::estimator_aux(q->right);
 
         // join left with right
-        return SimpleEstimator::join(leftGraph, rightGraph);
+        // return SimpleEstimator::join(leftGraph, rightGraph);
 
     }
 
-    return nullptr;
+    // return nullptr;
 }
 
 cardStat SimpleEstimator::estimate(RPQTree *query) {
+
+    noIn = 0;
+    noOut = 0;
+    noPaths = 1;
+    previousLabel = -1;
 
     // perform your estimation here
     estimator_aux(query);
