@@ -5,7 +5,6 @@
 #ifndef QS_SIMPLEEVALUATOR_H
 #define QS_SIMPLEEVALUATOR_H
 
-
 #include <memory>
 #include <cmath>
 #include "SimpleGraph.h"
