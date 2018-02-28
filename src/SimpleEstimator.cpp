@@ -19,6 +19,23 @@ SimpleEstimator::SimpleEstimator(std::shared_ptr<SimpleGraph> &g){
 void SimpleEstimator::prepare() {
 
     // do your prep here
+    /*
+     * nr,the number of tuples in the relation r.
+     * br,the number of blocks containing tuples of relation r.
+     * lr,the size of a tuple of relation r in bytes.
+     * fr , the blocking factor of relation r —
+     *   that is, the number of tuples of relation r that fit into one block.
+     * V(A,r),the number of distinct values that appear in the relation r for attribute A.
+     *   This value is the same as the size of A(r).If A is a key for relation r,V(A,r) is nr .
+     */
+
+    auto nr = graph->getNoEdges();
+    auto V = graph->getNoVertices();
+    std::cout<< std::endl;
+    std::cout << "no of tuples in relation: " << nr;
+    std::cout<< std::endl;
+    std::cout << "no of V in relation: " << V;
+    std::cout<< std::endl;
 
 }
 
