@@ -219,7 +219,7 @@ std::shared_ptr<SimpleGraph> SimpleEstimator::estimator_aux(RPQTree *q) {
 cardStat SimpleEstimator::estimate(RPQTree *query) {
 
     // perform your estimation here
-    //estimator_aux(query);
+    estimator_aux(query);
     return SimpleEstimator::computeStats();
     // return cardStat {0, 0, 0};
 }
