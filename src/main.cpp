@@ -89,7 +89,7 @@ int main(int argc, char *argv[]) {
         std::cout << "\nProcessing query: ";
         query.print();
         RPQTree *queryTree = RPQTree::strToTree(query.path);
-        std::cout << "Parsed query tree: ";
+        std::cout << "Parsed query tree: " << std::endl;
         queryTree->print();
 
         start = std::chrono::steady_clock::now();
