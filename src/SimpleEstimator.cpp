@@ -83,10 +83,47 @@ void SimpleEstimator::prepare() {
         edgeDistVertCount.emplace_back(std::make_pair (groupededges[i].first, p));
     }
 
+    // calculate edgeCountMatrix,
+    // for each element,
+    // <<left label, right label>, list of intersection vertices.>
+    for (int i = 0; i < groupededges.size(); i++) {
+        for (int j = 0; j < groupededges.size(); j++) {
+            auto pair = std::make_pair(groupededges[i],groupededges[j]);
+            edgeCountMatrix.emplace_back(std::make_pair(pair,calculateIntersection(groupededges[i].second, groupededges[j].second)));
+        }
+    }
+    // for intersection vertices (inverse).
+    for (int i = 0; i < groupededgesinverse.size(); i++) {
+        for (int j = 0; j < groupededgesinverse.size(); j++) {
+            auto pair = std::make_pair(groupededgesinverse[i],groupededgesinverse[j]);
+            edgeCountMatrix.emplace_back(std::make_pair(pair,calculateIntersection(groupededgesinverse[i].second, groupededgesinverse[j].second)));
+        }
+    }
+
     // output
     for (int i = 0; i < groupededges.size(); i++) {
         std::cout << "label: " << groupededges[i].first  << " encountered times: " << groupededges[i].second.size() << std::endl;
         std::cout << "label: " << edgeDistVertCount[i].first  << " left distinctVertices times: " << edgeDistVertCount[i].second.first <<  " right distinctVertices times: " << edgeDistVertCount[i].second.second << std::endl;
+    }
+    for (int i = 0; i < edgeCountMatrix.size(); i++) {
+        std::cout << "label: " << edgeCountMatrix[i].first.first  << " to label: " <<  edgeCountMatrix[i].first.second << " has" <<  edgeCountMatrix[i].second.size() <<" intersection vertices: " << std::endl;
+    }
+}
+
+// calculate the intersected vertices of two sets(labels).
+// return distinct vertices.
+std::vector<uint32_t> calculateIntersection(std::vector<std::pair<uint32_t,uint32_t>> v1, std::vector<std::pair<uint32_t,uint32_t>> v2){
+    std::vector<uint32_t > intersection;
+    for (int i = 0; i < v1.size(); ++i) {
+        for (int j = 0; j < v2.size(); ++j) {
+            if(v1[i].second==v2[j].first){
+                bool found = false;
+                for (int k = 0; k < intersection.size(); ++k) {
+                    if(intersection[k]==v2[j].first) found = true;
+                }
+                if(!found) intersection.emplace_back(v2[j].first);
+            }
+        }
     }
 }
 
@@ -123,10 +160,31 @@ void SimpleEstimator::calculate(uint32_t label, bool inverse) {
 
         uint32_t divider = distinctVertices.size();
         if(divider < cardStat1.noIn ) divider = cardStat1.noIn;
+
+        auto key = std::make_pair(previousLabel,label);
+        if(!inverse) {
+            for (int i = 0; i < edgeCountMatrix.size(); ++i) {
+                if(edgeCountMatrix[i].first.first==key.first && edgeCountMatrix[i].first.second==key.second){
+                    divider = edgeCountMatrix[i].first.second;
+                    break;
+                }
+            }
+        }
+        else{
+            for (int i = 0; i < edgeCountMatrixInverse.size(); ++i) {
+                if(edgeCountMatrixInverse[i].first.first==key.first && edgeCountMatrixInverse[i].first.second==key.second){
+                    divider = edgeCountMatrixInverse[i].first.second;
+                    break;
+                }
+            }
+        }
+
         cardStat1.noPaths = cardStat1.noPaths * edges.size() /  divider;
 
         std::cout << "current processing label is " << label << std::endl;
         std::cout << "# of distinctVertices intersection vertices: " << distinctVertices.size() << std::endl;
+
+        std::cout << "Divider is: " << divider << std::endl;
 
         cardStat1.noIn = edgeDistVertCount[label].second.second;
     }
@@ -142,6 +200,7 @@ void SimpleEstimator::calculate(uint32_t label, bool inverse) {
                 break;
             }
         }
+        previousLabel=label;
     }
 }
 
@@ -180,16 +239,12 @@ void  SimpleEstimator::estimator_aux(RPQTree *q) {
 
 cardStat SimpleEstimator::estimate(RPQTree *query) {
 
+    previousLabel= -1;
     cardStat1.noIn = 0;
     cardStat1.noOut= 0;
     cardStat1.noPaths = 0;
 
     // perform your estimation here
     estimator_aux(query);
-<<<<<<< HEAD
-    return SimpleEstimator::computeStats();
-    // return cardStat {0, 0, 0};
-=======
     return cardStat1;
->>>>>>> 728c6ad137ce5a5d21409fd64c1cac33e9edf082
 }
