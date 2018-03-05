@@ -125,7 +125,7 @@ void SimpleEstimator::calculate(uint32_t label, bool inverse) {
         // because we are trying to get the min value of (Ts * Tr / divider), so we choose the larger divider,
         // which means, divider = Max(V(R,Y), V(S,Y))
         uint32_t divider = 0;
-        // calculate the value of V(S,Y), the current label, or the right part of the join calculation.
+        // calculate the value of V(S,Y).
         for (int i = 0; i < edgeDistVertCount.size(); i++) {
             if(edgeDistVertCount[i].first==label){
                 if(!inverse) {
@@ -136,7 +136,7 @@ void SimpleEstimator::calculate(uint32_t label, bool inverse) {
                 }
             }
         }
-        // calculate the value of V(R,Y), the previous label, or the left part of the join calculation.
+        // calculate the value of V(R,Y).
         // meanwhile, get the larger value between V(R,Y) and V(S,Y))
         for (int i = 0; i < edgeDistVertCount.size(); i++) {
             if(edgeDistVertCount[i].first==previousLabel){
@@ -152,7 +152,7 @@ void SimpleEstimator::calculate(uint32_t label, bool inverse) {
         }
 
         // process the label. Get all edges with this label.
-        // Edges.size() is T_R in the formula.
+        // Edges.size() = Tr or Ts.
         std::vector<std::pair<uint32_t,uint32_t>> edges;
         if(!inverse) {
             for (int i = 0; i < groupededges.size(); i++) {
@@ -188,6 +188,7 @@ void SimpleEstimator::calculate(uint32_t label, bool inverse) {
         }
         */
 
+        // apply the formula. noPhts = Tr * Ts / Max(V(R,Y), V(S,Y))
         cardStat1.noPaths = cardStat1.noPaths * edges.size() /  divider;
 
         std::cout << "current processing label is: " << label << std::endl;
@@ -206,7 +207,7 @@ void SimpleEstimator::calculate(uint32_t label, bool inverse) {
         // Solution 2.
         // update noIn and noOut.
         // This takes more time, but more accurate for noIn and noOut.
-        // We are using solution 1 since noIns and noOuts are not used to measure the accuracy.
+        // We use solution 1 since noIns and noOuts are not used to measure the accuracy.
         // SimpleEstimator::updateCardStat(edges, previousEdges, isprocessing2ndLabel);
         // isprocessing2ndLabel = false;
     }
