@@ -18,8 +18,8 @@ class SimpleEstimator : public Estimator {
     cardStat cardStat1{};
     std::shared_ptr<SimpleGraph> graph;
     std::vector<std::pair<uint32_t,std::pair<uint32_t,uint32_t>>> edgeDistVertCount;
-    std::vector<std::pair<std::pair<uint32_t,uint32_t>, std::vector<uint32_t>>> edgeCountMatrix;
-    std::vector<std::pair<std::pair<uint32_t,uint32_t>, std::vector<uint32_t>>> edgeCountMatrixInverse;
+    //std::vector<std::pair<std::pair<uint32_t,uint32_t>, std::vector<uint32_t>>> edgeCountMatrix;
+    //std::vector<std::pair<std::pair<uint32_t,uint32_t>, std::vector<uint32_t>>> edgeCountMatrixInverse;
     std::vector<std::pair<uint32_t,std::vector<std::pair<uint32_t,uint32_t>>>> groupededges;
     std::vector<std::pair<uint32_t,std::vector<std::pair<uint32_t,uint32_t>>>> groupededgesinverse;
 
