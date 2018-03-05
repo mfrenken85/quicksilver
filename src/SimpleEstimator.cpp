@@ -194,11 +194,16 @@ void SimpleEstimator::calculate(uint32_t label, bool inverse) {
 
         // Solution 1.
         // This is fast, but not accurate.
-         cardStat1.noIn = edgeDistVertCount[label].second.second;
+        for (int j = 0; j < edgeDistVertCount.size(); ++j) {
+            if(edgeDistVertCount[j].first==label){
+                cardStat1.noIn = edgeDistVertCount[j].second.second;
+                break;
+            }
+        }
 
         // Solution 2.
         // update noIn and noOut.
-        // This takes more time, but more accurate.
+        // This takes more time, but more accurate for noIn and noOut.
         // We are using solution 1 since noIns and noOuts are not used to measure the accuracy.
         // SimpleEstimator::updateCardStat(edges, previousEdges, isprocessing2ndLabel);
         // isprocessing2ndLabel = false;
@@ -207,12 +212,22 @@ void SimpleEstimator::calculate(uint32_t label, bool inverse) {
         std::cout << "first processed label is " << label << std::endl;
 
         if(!inverse) {
-            cardStat1.noIn = edgeDistVertCount[label].second.second;
-            cardStat1.noOut = edgeDistVertCount[label].second.first;
+            for (int j = 0; j < edgeDistVertCount.size(); ++j) {
+                if(edgeDistVertCount[j].first==label){
+                    cardStat1.noIn = edgeDistVertCount[j].second.second;
+                    cardStat1.noOut = edgeDistVertCount[j].second.first;
+                    break;
+                }
+            }
         }
         else{
-            cardStat1.noOut = edgeDistVertCount[label].second.second;
-            cardStat1.noIn = edgeDistVertCount[label].second.first;
+            for (int j = 0; j < edgeDistVertCount.size(); ++j) {
+                if(edgeDistVertCount[j].first==label){
+                    cardStat1.noOut = edgeDistVertCount[j].second.second;
+                    cardStat1.noIn = edgeDistVertCount[j].second.first;
+                    break;
+                }
+            }
         }
         for (int i = 0; i < groupededges.size(); ++i) {
             if(groupededges[i].first==label){
@@ -221,7 +236,7 @@ void SimpleEstimator::calculate(uint32_t label, bool inverse) {
             }
         }
         // when processing the 2nd label, noOut will be updated.
-        isprocessing2ndLabel = true;
+        // isprocessing2ndLabel = true;
     }
 
     previousLabel=label;
