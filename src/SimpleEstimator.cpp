@@ -21,6 +21,9 @@ void SimpleEstimator::prepare() {
 
     // do your prep here
 
+    //edgeCountMatrix.resize(graph->getNoLabels());
+    //edgeCountMatrixInverse.resize(graph->getNoLabels());
+
     for(int i = 0; i < graph->getNoVertices(); i++) {
         if (!graph->adj[i].empty()){
             for (int j = 0; j < graph->adj[i].size(); j++ ) {
@@ -83,9 +86,14 @@ void SimpleEstimator::prepare() {
         edgeDistVertCount.emplace_back(std::make_pair (groupededges[i].first, p));
     }
 
+    groupededges.resize(graph->getNoLabels());
+    groupededgesinverse.resize(graph->getNoLabels());
+    edgeDistVertCount.resize(graph->getNoLabels());
+
     // calculate edgeCountMatrix,
     // for each element,
     // <<left label, right label>, list of intersection vertices.>
+    /*
     for (int i = 0; i < groupededges.size(); i++) {
         for (int j = 0; j < groupededges.size(); j++) {
             auto pair = std::make_pair(groupededges[i],groupededges[j]);
@@ -99,15 +107,18 @@ void SimpleEstimator::prepare() {
             edgeCountMatrix.emplace_back(std::make_pair(pair,calculateIntersection(groupededgesinverse[i].second, groupededgesinverse[j].second)));
         }
     }
+     */
 
     // output
     for (int i = 0; i < groupededges.size(); i++) {
         std::cout << "label: " << groupededges[i].first  << " encountered times: " << groupededges[i].second.size() << std::endl;
         std::cout << "label: " << edgeDistVertCount[i].first  << " left distinctVertices times: " << edgeDistVertCount[i].second.first <<  " right distinctVertices times: " << edgeDistVertCount[i].second.second << std::endl;
     }
+    /*
     for (int i = 0; i < edgeCountMatrix.size(); i++) {
         std::cout << "label: " << edgeCountMatrix[i].first.first  << " to label: " <<  edgeCountMatrix[i].first.second << " has" <<  edgeCountMatrix[i].second.size() <<" intersection vertices: " << std::endl;
     }
+     */
 }
 
 // calculate the intersected vertices of two sets(labels).
@@ -161,6 +172,7 @@ void SimpleEstimator::calculate(uint32_t label, bool inverse) {
         uint32_t divider = distinctVertices.size();
         if(divider < cardStat1.noIn ) divider = cardStat1.noIn;
 
+        /*
         auto key = std::make_pair(previousLabel,label);
         if(!inverse) {
             for (int i = 0; i < edgeCountMatrix.size(); ++i) {
@@ -178,6 +190,7 @@ void SimpleEstimator::calculate(uint32_t label, bool inverse) {
                 }
             }
         }
+         */
 
         cardStat1.noPaths = cardStat1.noPaths * edges.size() /  divider;
 
