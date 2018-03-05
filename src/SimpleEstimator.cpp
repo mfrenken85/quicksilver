@@ -158,12 +158,12 @@ void SimpleEstimator::calculate(uint32_t label, bool inverse) {
         for (int i = 0; i < edgeDistVertCount.size(); i++) {
             if(edgeDistVertCount[i].first==previousLabel){
                 if(!previousInverse) {
-                    if(divider<edgeDistVertCount[i].second.first)
-                        divider = edgeDistVertCount[i].second.first;
-                }
-                else{
                     if(divider<edgeDistVertCount[i].second.second)
                         divider = edgeDistVertCount[i].second.second;
+                }
+                else{
+                    if(divider<edgeDistVertCount[i].second.first)
+                        divider = edgeDistVertCount[i].second.first;
                 }
             }
         }
