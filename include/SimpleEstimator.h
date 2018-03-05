@@ -16,6 +16,7 @@ class SimpleEstimator : public Estimator {
 
     // for processing backwords.
     bool previousInverse;
+    bool isprocessing2ndLabel;
     uint32_t previousLabel;
 
     cardStat cardStat1{};
@@ -35,7 +36,7 @@ public:
     void prepare() override ;
     cardStat estimate(RPQTree *q) override ;
 
-    std::vector<uint32_t> calculateIntersection(std::vector<std::pair<uint32_t,uint32_t>> v1, std::vector<std::pair<uint32_t,uint32_t>> v2);
+    void updateCardStat(std::vector<std::pair<uint32_t,uint32_t>> v2, std::vector<std::pair<uint32_t,uint32_t>> v1, bool is2ndLabel);
     void estimator_aux(RPQTree *q);
     void calculate(uint32_t currentLabel, bool inverse);
     std::shared_ptr<SimpleGraph> join(std::shared_ptr<SimpleGraph> &left, std::shared_ptr<SimpleGraph> &right);
