@@ -170,6 +170,7 @@ void SimpleEstimator::calculate(uint32_t label, bool inverse) {
         }
         // process the label. Get all edges with previous Label.
         // calculated to update noIn and noOut.
+        /*
         std::vector<std::pair<uint32_t,uint32_t>> previousEdges;
         if(!previousInverse) {
             for (int i = 0; i < groupededges.size(); i++) {
@@ -185,6 +186,7 @@ void SimpleEstimator::calculate(uint32_t label, bool inverse) {
                 }
             }
         }
+        */
 
         cardStat1.noPaths = cardStat1.noPaths * edges.size() /  divider;
 
