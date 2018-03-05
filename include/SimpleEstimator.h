@@ -14,13 +14,18 @@
 
 class SimpleEstimator : public Estimator {
 
+    // for processing backwords.
+    bool previousInverse;
     uint32_t previousLabel;
+
     cardStat cardStat1{};
     std::shared_ptr<SimpleGraph> graph;
+
+    // for each element, <label, <left distinct vertices count, right distinct vertices count>>.
     std::vector<std::pair<uint32_t,std::pair<uint32_t,uint32_t>>> edgeDistVertCount;
-    //std::vector<std::pair<std::pair<uint32_t,uint32_t>, std::vector<uint32_t>>> edgeCountMatrix;
-    //std::vector<std::pair<std::pair<uint32_t,uint32_t>, std::vector<uint32_t>>> edgeCountMatrixInverse;
+    // for each element, <label, list of edges with this label>.
     std::vector<std::pair<uint32_t,std::vector<std::pair<uint32_t,uint32_t>>>> groupededges;
+    // for each element, <label, list of edges with this label, but reverse>.
     std::vector<std::pair<uint32_t,std::vector<std::pair<uint32_t,uint32_t>>>> groupededgesinverse;
 
 public:
