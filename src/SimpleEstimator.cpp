@@ -77,8 +77,10 @@ void SimpleEstimator::prepare() {
         std::vector<uint32_t > left;
         std::vector<uint32_t > right;
         for (int j = 0; j < groupededges[i].second.size(); ++j) {
+            // if the vertices has not been added before.
             if ( std::find(left.begin(), left.end(), groupededges[i].second[j].first) == left.end() )
                 left.emplace_back(groupededges[i].second[j].first);
+            // if the vertices has not been added before.
             if ( std::find(right.begin(), right.end(), groupededges[i].second[j].second) == right.end() )
                 right.emplace_back(groupededges[i].second[j].second);
         }
@@ -90,35 +92,11 @@ void SimpleEstimator::prepare() {
     groupededgesinverse.resize(graph->getNoLabels());
     edgeDistVertCount.resize(graph->getNoLabels());
 
-    // calculate edgeCountMatrix,
-    // for each element,
-    // <<left label, right label>, list of intersection vertices.>
-    /*
-    for (int i = 0; i < groupededges.size(); i++) {
-        for (int j = 0; j < groupededges.size(); j++) {
-            auto pair = std::make_pair(groupededges[i],groupededges[j]);
-            edgeCountMatrix.emplace_back(std::make_pair(pair,calculateIntersection(groupededges[i].second, groupededges[j].second)));
-        }
-    }
-    // for intersection vertices (inverse).
-    for (int i = 0; i < groupededgesinverse.size(); i++) {
-        for (int j = 0; j < groupededgesinverse.size(); j++) {
-            auto pair = std::make_pair(groupededgesinverse[i],groupededgesinverse[j]);
-            edgeCountMatrix.emplace_back(std::make_pair(pair,calculateIntersection(groupededgesinverse[i].second, groupededgesinverse[j].second)));
-        }
-    }
-     */
-
     // output
     for (int i = 0; i < groupededges.size(); i++) {
         std::cout << "label: " << groupededges[i].first  << " encountered times: " << groupededges[i].second.size() << std::endl;
         std::cout << "label: " << edgeDistVertCount[i].first  << " left distinctVertices times: " << edgeDistVertCount[i].second.first <<  " right distinctVertices times: " << edgeDistVertCount[i].second.second << std::endl;
     }
-    /*
-    for (int i = 0; i < edgeCountMatrix.size(); i++) {
-        std::cout << "label: " << edgeCountMatrix[i].first.first  << " to label: " <<  edgeCountMatrix[i].first.second << " has" <<  edgeCountMatrix[i].second.size() <<" intersection vertices: " << std::endl;
-    }
-     */
 }
 
 // calculate the intersected vertices of two sets(labels).
@@ -143,7 +121,38 @@ void SimpleEstimator::calculate(uint32_t label, bool inverse) {
     // std::cout << "current Label: " << cl << std::endl;
     if( cardStat1.noPaths!= 0 ){
 
+        // apply the formula.
+        // because we are trying to get the min value of (Ts * Tr / divider), so we choose the larger divider,
+        // which means, divider = Max(V(R,Y), V(S,Y))
+        uint32_t divider = 0;
+        // calculate the value of V(S,Y).
+        for (int i = 0; i < edgeDistVertCount.size(); i++) {
+            if(edgeDistVertCount[i].first==label){
+                if(!inverse) {
+                    divider = edgeDistVertCount[i].second.first;
+                }
+                else {
+                    divider = edgeDistVertCount[i].second.second;
+                }
+            }
+        }
+        // calculate the value of V(R,Y).
+        // meanwhile, get the larger value between V(R,Y) and V(S,Y))
+        for (int i = 0; i < edgeDistVertCount.size(); i++) {
+            if(edgeDistVertCount[i].first==previousLabel){
+                if(!previousInverse) {
+                    if(divider<edgeDistVertCount[i].second.second)
+                        divider = edgeDistVertCount[i].second.second;
+                }
+                else{
+                    if(divider<edgeDistVertCount[i].second.first)
+                        divider = edgeDistVertCount[i].second.first;
+                }
+            }
+        }
+
         // process the label. Get all edges with this label.
+        // Edges.size() = Tr or Ts.
         std::vector<std::pair<uint32_t,uint32_t>> edges;
         if(!inverse) {
             for (int i = 0; i < groupededges.size(); i++) {
@@ -159,62 +168,120 @@ void SimpleEstimator::calculate(uint32_t label, bool inverse) {
                 }
             }
         }
-
-        // calculate the distinct vertices which is connected with the edges we got.
-        std::vector<uint32_t> distinctVertices;
-        for (int i = 0; i < edges.size(); i++) {
-            distinctVertices.emplace_back(edges[i].first);
-        }
-        // remove duplicated vertices.
-        std::sort( distinctVertices.begin(), distinctVertices.end() );
-        distinctVertices.erase( std::unique( distinctVertices.begin(), distinctVertices.end() ), distinctVertices.end() );
-
-        uint32_t divider = distinctVertices.size();
-        if(divider < cardStat1.noIn ) divider = cardStat1.noIn;
-
+        // process the label. Get all edges with previous Label.
+        // calculated to update noIn and noOut.
         /*
-        auto key = std::make_pair(previousLabel,label);
+        std::vector<std::pair<uint32_t,uint32_t>> previousEdges;
+        if(!previousInverse) {
+            for (int i = 0; i < groupededges.size(); i++) {
+                if (groupededges[i].first == previousLabel) {
+                    previousEdges = groupededges[i].second;
+                }
+            }
+        }
+        else{
+            for (int i = 0; i < groupededgesinverse.size(); i++) {
+                if (groupededgesinverse[i].first == previousLabel) {
+                    previousEdges = groupededgesinverse[i].second;
+                }
+            }
+        }
+        */
+
+        // apply the formula. noPhts = Tr * Ts / Max(V(R,Y), V(S,Y))
+        cardStat1.noPaths = cardStat1.noPaths * edges.size() /  divider;
+
+        std::cout << "current processing label is: " << label << std::endl;
+        std::cout << "# of edges with current label is: " << edges.size() << std::endl;
+        std::cout << "Divider (V(R,Y) or V(S,Y)) is: " << divider << std::endl;
+
+        // Solution 1.
+        // This is fast, but not accurate.
+        for (int j = 0; j < edgeDistVertCount.size(); ++j) {
+            if(edgeDistVertCount[j].first==label){
+                cardStat1.noIn = edgeDistVertCount[j].second.second;
+                break;
+            }
+        }
+
+        // Solution 2.
+        // update noIn and noOut.
+        // This takes more time, but more accurate for noIn and noOut.
+        // We use solution 1 since noIns and noOuts are not used to measure the accuracy.
+        // SimpleEstimator::updateCardStat(edges, previousEdges, isprocessing2ndLabel);
+        // isprocessing2ndLabel = false;
+    }
+    else{
+        std::cout << "first processed label is " << label << std::endl;
+
         if(!inverse) {
-            for (int i = 0; i < edgeCountMatrix.size(); ++i) {
-                if(edgeCountMatrix[i].first.first==key.first && edgeCountMatrix[i].first.second==key.second){
-                    divider = edgeCountMatrix[i].first.second;
+            for (int j = 0; j < edgeDistVertCount.size(); ++j) {
+                if(edgeDistVertCount[j].first==label){
+                    cardStat1.noIn = edgeDistVertCount[j].second.second;
+                    cardStat1.noOut = edgeDistVertCount[j].second.first;
                     break;
                 }
             }
         }
         else{
-            for (int i = 0; i < edgeCountMatrixInverse.size(); ++i) {
-                if(edgeCountMatrixInverse[i].first.first==key.first && edgeCountMatrixInverse[i].first.second==key.second){
-                    divider = edgeCountMatrixInverse[i].first.second;
+            for (int j = 0; j < edgeDistVertCount.size(); ++j) {
+                if(edgeDistVertCount[j].first==label){
+                    cardStat1.noOut = edgeDistVertCount[j].second.second;
+                    cardStat1.noIn = edgeDistVertCount[j].second.first;
                     break;
                 }
             }
         }
-         */
-
-        cardStat1.noPaths = cardStat1.noPaths * edges.size() /  divider;
-
-        std::cout << "current processing label is " << label << std::endl;
-        std::cout << "# of distinctVertices intersection vertices: " << distinctVertices.size() << std::endl;
-
-        std::cout << "Divider is: " << divider << std::endl;
-
-        cardStat1.noIn = edgeDistVertCount[label].second.second;
-    }
-    else{
-
-        std::cout << "first processed label is " << label << std::endl;
-
-        cardStat1.noIn = edgeDistVertCount[label].second.second;
-        cardStat1.noOut = edgeDistVertCount[label].second.first;
         for (int i = 0; i < groupededges.size(); ++i) {
             if(groupededges[i].first==label){
                 cardStat1.noPaths = groupededges[i].second.size();
                 break;
             }
         }
-        previousLabel=label;
+        // when processing the 2nd label, noOut will be updated.
+        // isprocessing2ndLabel = true;
     }
+
+    previousLabel=label;
+    previousInverse=inverse;
+}
+
+// update the noIn and noOut of the cardStat.
+void SimpleEstimator::updateCardStat(std::vector<std::pair<uint32_t,uint32_t>> v2, std::vector<std::pair<uint32_t,uint32_t>> v1, bool is2ndLabel){
+
+    //std::cout << "v1 size: " << v1.size() << std::endl;
+    //std::cout << "v2 size: " << v2.size() << std::endl;
+
+    // the distinct intersection vertices.
+    std::vector<uint32_t> intersection;
+    for (int i = 0; i < v1.size(); i++) {
+        for (int j = 0; j < v2.size(); j++) {
+            if(v1[i].second == v2[j].first){
+                if(std::find(intersection.begin(), intersection.end(), v2[j].first) == intersection.end()) {
+                    intersection.emplace_back(v2[j].first);
+                }
+            }
+        }
+    }
+
+    uint32_t noleftCounter=0;
+    uint32_t norightCounter=0;
+
+    //std::cout << "intersection size: " << intersection.size() << std::endl;
+
+    for (int l = 0; l < intersection.size(); l++) {
+        for (int i = 0; i < v1.size(); i++) {
+            if(v1[i].second==intersection[l]) noleftCounter++;
+        }
+        for (int j = 0; j < v2.size(); j++) {
+            if(v2[j].first==intersection[l]) norightCounter++;
+        }
+    }
+
+    // only update noOut of the cardStat when processing the 2nd label.
+    if(is2ndLabel) cardStat1.noOut=noleftCounter;
+
+    cardStat1.noIn=norightCounter;
 }
 
 void  SimpleEstimator::estimator_aux(RPQTree *q) {
@@ -252,7 +319,11 @@ void  SimpleEstimator::estimator_aux(RPQTree *q) {
 
 cardStat SimpleEstimator::estimate(RPQTree *query) {
 
+    // for processing backwords.
     previousLabel= -1;
+    previousInverse = false;
+    isprocessing2ndLabel = false;
+
     cardStat1.noIn = 0;
     cardStat1.noOut= 0;
     cardStat1.noPaths = 0;
