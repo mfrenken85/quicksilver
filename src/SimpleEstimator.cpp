@@ -11,6 +11,11 @@
 // Several solutions were implemented, the current one gives best results
 // with relatively fast execution.
 
+// Current solution,
+// Processing the labels from the Left to Right.
+// Possible alternative solution.
+// Processing the labels from the Right to Left.
+
 #include <cmath>
 #include "SimpleGraph.h"
 #include "SimpleEstimator.h"
@@ -26,14 +31,15 @@ void SimpleEstimator::prepare() {
     // do your prep here
 
     for(int i = 0; i < graph->getNoVertices(); i++) {
+
         if (!graph->adj[i].empty()){
             for (int j = 0; j < graph->adj[i].size(); j++ ) {
 
                 uint32_t label = graph->adj[i][j].first;
 
                 // groupe edges based on their labels.
-                // <label, <vertices, vertices>>
-
+                // for each element, it has the following format:
+                // <label, list of <vertices, vertices>>
                 // increase the counter if the label is already in the list.
                 bool found = false;
                 for (int k = 0; k < groupededges.size(); k++) {
@@ -54,7 +60,7 @@ void SimpleEstimator::prepare() {
     }
 
     // calculate edgeDistVertCount,
-    // for each element,
+    // for each element, it has the following format:
     // <label , <number of distinct vertices, number of distinct vertices>>
     for (int i = 0; i < groupededges.size(); i++) {
         std::vector<uint32_t > left;
@@ -202,8 +208,12 @@ void  SimpleEstimator::estimator_aux(RPQTree *q) {
 
     if(q->isConcat()) {
         // evaluate the children
+        // processing the labels from left to right.
         SimpleEstimator::estimator_aux(q->left);
         SimpleEstimator::estimator_aux(q->right);
+
+        // Possible alternative solution.
+        // Processing the labels from the Right to Left.
     }
 }
 
