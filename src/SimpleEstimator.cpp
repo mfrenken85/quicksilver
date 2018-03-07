@@ -143,10 +143,7 @@ void SimpleEstimator::calculate(uint32_t label, bool inverse) {
                 }
             }
         }
-
-        // assume uniform distributed.
-        divider = divider / 4;
-
+        
         //Ts = current cardStat1.noPaths
         // apply the formula: new noPhts = Tr * Ts / Max(V(R,Y), V(S,Y))
         cardStat1.noPaths = cardStat1.noPaths * edges.size() /  divider;
