@@ -157,7 +157,6 @@ void SimpleEstimator::calculate(uint32_t label, bool inverse) {
                 break;
             }
         }
-        cardStat1.noIn = edgeDistVertCount[label].second.second;
     }
     else{
 
