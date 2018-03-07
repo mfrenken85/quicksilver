@@ -235,5 +235,6 @@ cardStat SimpleEstimator::estimate(RPQTree *query) {
 
     // perform your estimation here
     estimator_aux(query);
+    if(cardStat1.noPaths==0) cardStat1.noPaths = 10;
     return cardStat1;
 }
