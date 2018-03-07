@@ -144,6 +144,8 @@ void SimpleEstimator::calculate(uint32_t label, bool inverse) {
             }
         }
 
+        divider = divider*2;
+        
         //Ts = current cardStat1.noPaths
         // apply the formula: new noPhts = Tr * Ts / Max(V(R,Y), V(S,Y))
         cardStat1.noPaths = cardStat1.noPaths * edges.size() /  divider;
@@ -235,6 +237,5 @@ cardStat SimpleEstimator::estimate(RPQTree *query) {
 
     // perform your estimation here
     estimator_aux(query);
-    if(cardStat1.noPaths==0) cardStat1.noPaths = 10;
     return cardStat1;
 }
