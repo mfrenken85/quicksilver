@@ -49,24 +49,6 @@ void SimpleEstimator::prepare() {
                     v.emplace_back(std::make_pair (i,graph->adj[i][j].second));
                     groupededges.emplace_back( std::make_pair(label ,v) );
                 }
-
-                //  groupe edges based on their labels (inverse)
-
-                // increase the counter if the label is already in the list.
-                found = false;
-                for (int k = 0; k < groupededgesinverse.size(); k++) {
-                    if(groupededgesinverse[k].first == label){
-                        found = true;
-                        groupededgesinverse[k].second.emplace_back(std::make_pair(graph->adj[i][j].second, i));
-                        break;
-                    }
-                }
-                // otherwise add that new label into the list.
-                if(!found) {
-                    std::vector<std::pair<uint32_t,uint32_t>> v;
-                    v.emplace_back(std::make_pair (graph->adj[i][j].second, i));
-                    groupededgesinverse.emplace_back( std::make_pair(label ,v) );
-                }
             }
         }
     }
@@ -90,7 +72,6 @@ void SimpleEstimator::prepare() {
     }
 
     groupededges.resize(graph->getNoLabels());
-    groupededgesinverse.resize(graph->getNoLabels());
     edgeDistVertCount.resize(graph->getNoLabels());
 
     // output
@@ -111,45 +92,44 @@ void SimpleEstimator::calculate(uint32_t label, bool inverse) {
         uint32_t divider = 0;
         // calculate the value of V(S,Y).
         for (int i = 0; i < edgeDistVertCount.size(); i++) {
-            if(edgeDistVertCount[i].first==label){
+            if(edgeDistVertCount[i].first == label){
                 if(!inverse) {
                     divider = edgeDistVertCount[i].second.first;
+                    break;
                 }
                 else {
                     divider = edgeDistVertCount[i].second.second;
+                    break;
                 }
             }
         }
-        // the value of V(R,Y) = noIns.
-        // Get the larger value between V(R,Y) and V(S,Y))
-        if(cardStat1.noIn > divider) divider = cardStat1.noIn;
 
         // process the label. Get all edges with this label.
-        // Edges.size() = Tr.
-        std::vector<std::pair<uint32_t,uint32_t>> edges;
-        if(!inverse) {
-            for (int i = 0; i < groupededges.size(); i++) {
-                if (groupededges[i].first == label) {
-                    edges = groupededges[i].second;
-                    break;
-                }
+        // Tr.
+        uint32_t Tr = 0;
+        for (int i = 0; i < groupededges.size(); i++) {
+            if (groupededges[i].first == label) {
+                Tr = groupededges[i].second.size();
+                break;
             }
         }
-        else{
-            for (int i = 0; i < groupededgesinverse.size(); i++) {
-                if (groupededgesinverse[i].first == label) {
-                    edges = groupededgesinverse[i].second;
-                    break;
-                }
-            }
-        }
-        
+
+        // the value of V(R,Y) = noIns * no of current label / total label.
+        // say from the previous step, we have 1000 distinct vertices, i.e cardStat1.noIn = 1000.
+        // now we have label 3, assume there are in total 200 labels labeled with 3 out of total 20000 labels.
+        // so we eastimate V(R,Y) = 1000 * 200 / 20000 = 10.
+        // finally, get the larger value between V(R,Y) and V(S,Y))
+        std::cout << cardStat1.noIn << " * " << Tr << " / " << graph->getNoEdges() ;
+        uint32_t t = cardStat1.noIn * Tr / graph->getNoEdges();
+        std::cout << " = " << t << std::endl;
+        if( t > divider) divider = t;
+
         //Ts = current cardStat1.noPaths
         // apply the formula: new noPhts = Tr * Ts / Max(V(R,Y), V(S,Y))
-        cardStat1.noPaths = cardStat1.noPaths * edges.size() /  divider;
+        cardStat1.noPaths = cardStat1.noPaths * Tr /  divider;
 
         std::cout << "current processing label is: " << label << std::endl;
-        std::cout << "# of edges with current label is: " << edges.size() << std::endl;
+        std::cout << "# of edges with current label is: " << Tr << std::endl;
         std::cout << "Divider (V(R,Y) or V(S,Y)) is: " << divider << std::endl;
 
         for (int j = 0; j < edgeDistVertCount.size(); ++j) {

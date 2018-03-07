@@ -21,8 +21,6 @@ class SimpleEstimator : public Estimator {
     std::vector<std::pair<uint32_t,std::pair<uint32_t,uint32_t>>> edgeDistVertCount;
     // for each element, <label, list of edges with this label>.
     std::vector<std::pair<uint32_t,std::vector<std::pair<uint32_t,uint32_t>>>> groupededges;
-    // for each element, <label, list of edges with this label, but reverse>.
-    std::vector<std::pair<uint32_t,std::vector<std::pair<uint32_t,uint32_t>>>> groupededgesinverse;
 
 public:
     explicit SimpleEstimator(std::shared_ptr<SimpleGraph> &g);
