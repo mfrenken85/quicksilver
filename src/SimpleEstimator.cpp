@@ -30,16 +30,13 @@ void SimpleEstimator::prepare() {
 
     // do your prep here
 
+    // groupe edges based on their labels.
+    // for each element, it has the following format:
+    // <label, list of <vertices, vertices>>
     for(int i = 0; i < graph->getNoVertices(); i++) {
-
         if (!graph->adj[i].empty()){
             for (int j = 0; j < graph->adj[i].size(); j++ ) {
-
                 uint32_t label = graph->adj[i][j].first;
-
-                // groupe edges based on their labels.
-                // for each element, it has the following format:
-                // <label, list of <vertices, vertices>>
                 // increase the counter if the label is already in the list.
                 bool found = false;
                 for (int k = 0; k < groupededges.size(); k++) {
@@ -89,95 +86,60 @@ void SimpleEstimator::prepare() {
 
 void SimpleEstimator::calculate(uint32_t label, bool inverse) {
 
-    // std::cout << "current Label: " << cl << std::endl;
-    if( cardStat1.noPaths!= 0 ){
+    // apply the formula.
+    // because we are trying to get the min value of (Ts * Tr / divider), so we choose the larger divider,
+    // which means, divider = Max(V(R,Y), V(S,Y))
+    uint32_t noIn = cardStat1.noIn;
+    uint32_t divider = 0;
 
-        // apply the formula.
-        // because we are trying to get the min value of (Ts * Tr / divider), so we choose the larger divider,
-        // which means, divider = Max(V(R,Y), V(S,Y))
-        uint32_t divider = 0;
-        // calculate the value of V(S,Y).
-        for (int i = 0; i < edgeDistVertCount.size(); i++) {
-            if(edgeDistVertCount[i].first == label){
-                if(!inverse) {
-                    divider = edgeDistVertCount[i].second.first;
-                    break;
-                }
-                else {
-                    divider = edgeDistVertCount[i].second.second;
-                    break;
-                }
-            }
-        }
-
-        // process the label. Get all edges with this label.
-        // Tr.
-        uint32_t Tr = 0;
-        for (int i = 0; i < groupededges.size(); i++) {
-            if (groupededges[i].first == label) {
-                Tr = groupededges[i].second.size();
+    // calculate the value of divider (V(S,Y)).
+    for (int i = 0; i < edgeDistVertCount.size(); i++) {
+        if(edgeDistVertCount[i].first == label){
+            if(!inverse) {
+                divider = edgeDistVertCount[i].second.first;
+                // if this is the first label, update noOut.
+                if( cardStat1.noPaths== 0 ) cardStat1.noOut = edgeDistVertCount[i].second.first;
+                cardStat1.noIn = edgeDistVertCount[i].second.second;
                 break;
             }
-        }
-
-        // the value of V(R,Y) = noIns * no of current label / total label.
-        // say from the previous step, we have 1000 distinct vertices, i.e cardStat1.noIn = 1000.
-        // now we have label 3, assume there are in total 200 labels labeled with 3 out of total 20000 labels.
-        // so we eastimate V(R,Y) = 1000 * 200 / 20000 = 10.
-        // finally, get the larger value between V(R,Y) and V(S,Y))
-        std::cout << cardStat1.noIn << " * " << Tr << " / " << graph->getNoEdges() ;
-        uint32_t t = cardStat1.noIn * Tr / graph->getNoEdges();
-        std::cout << " = " << t << std::endl;
-        if( t > divider) divider = t;
-
-        //Ts = current cardStat1.noPaths
-        // apply the formula: new noPhts = Tr * Ts / Max(V(R,Y), V(S,Y))
-        cardStat1.noPaths = cardStat1.noPaths * Tr /  divider;
-
-        std::cout << "current processing label is: " << label << std::endl;
-        std::cout << "# of edges with current label is: " << Tr << std::endl;
-        std::cout << "Divider (V(R,Y) or V(S,Y)) is: " << divider << std::endl;
-
-        for (int j = 0; j < edgeDistVertCount.size(); ++j) {
-            if(edgeDistVertCount[j].first==label){
-                cardStat1.noIn = edgeDistVertCount[j].second.second;
+            else {
+                divider = edgeDistVertCount[i].second.second;
+                // if this is the first label, update noOut.
+                if( cardStat1.noPaths== 0 ) cardStat1.noOut = edgeDistVertCount[i].second.second;
+                cardStat1.noIn = edgeDistVertCount[i].second.first;
                 break;
             }
         }
     }
-    else{
 
-        if(!inverse) {
-            for (int j = 0; j < edgeDistVertCount.size(); ++j) {
-                if(edgeDistVertCount[j].first==label){
-                    cardStat1.noIn = edgeDistVertCount[j].second.second;
-                    cardStat1.noOut = edgeDistVertCount[j].second.first;
-                    break;
-                }
-            }
+    // process the label. Get all edges with this labele and calculate Tr, which is the # of edges.
+    uint32_t Tr = 0;
+    for (int i = 0; i < groupededges.size(); i++) {
+        if (groupededges[i].first == label) {
+            Tr = groupededges[i].second.size();
+            break;
         }
-        else{
-            for (int j = 0; j < edgeDistVertCount.size(); ++j) {
-                if(edgeDistVertCount[j].first==label){
-                    cardStat1.noOut = edgeDistVertCount[j].second.second;
-                    cardStat1.noIn = edgeDistVertCount[j].second.first;
-                    break;
-                }
-            }
-        }
-
-        for (int i = 0; i < groupededges.size(); ++i) {
-            if(groupededges[i].first==label){
-                cardStat1.noPaths = groupededges[i].second.size();
-                break;
-            }
-        }
-
-        std::cout << "first processed label is " << label << std::endl;
-        std::cout << "# of edges with current label is: " << cardStat1.noPaths << std::endl;
-        std::cout << "noIn is: " << cardStat1.noIn << std::endl;
-        std::cout << "noOut is: " << cardStat1.noOut << std::endl;
     }
+
+    // the value of V(R,Y) = noIns * no of current label / total label.
+    // say from the previous step, we have 1000 distinct vertices, i.e cardStat1.noIn = 1000.
+    // now we have label 3, assume there are in total 200 labels labeled with 3 out of total 20000 labels.
+    // so we eastimate V(R,Y) = 1000 * 200 / 20000 = 10.
+    // finally, get the larger value between V(R,Y) and V(S,Y))
+    uint32_t tempDivider = noIn * Tr / graph->getNoEdges();
+    if( tempDivider > divider) divider = tempDivider;
+
+    //Ts = current cardStat1.noPaths
+    // apply the formula: new noPhts = Tr * Ts / Max(V(R,Y), V(S,Y))
+    // if this is the first label, update noOut.
+    if( cardStat1.noPaths== 0 ) cardStat1.noPaths = Tr;
+    else cardStat1.noPaths = cardStat1.noPaths * Tr /  divider;
+
+    std::cout << std::endl;
+    std::cout << "after processing label: " << label << std::endl;
+    std::cout << "current Ins is: " << cardStat1.noIn << std::endl;
+    std::cout << "current Paths is: " << cardStat1.noPaths << std::endl;
+    std::cout << "current Outs is: " << cardStat1.noOut << std::endl;
 }
 
 void  SimpleEstimator::estimator_aux(RPQTree *q) {
