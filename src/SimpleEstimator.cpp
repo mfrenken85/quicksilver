@@ -131,6 +131,7 @@ void SimpleEstimator::calculate(uint32_t label, bool inverse) {
             for (int i = 0; i < groupededges.size(); i++) {
                 if (groupededges[i].first == label) {
                     edges = groupededges[i].second;
+                    break;
                 }
             }
         }
@@ -138,6 +139,7 @@ void SimpleEstimator::calculate(uint32_t label, bool inverse) {
             for (int i = 0; i < groupededgesinverse.size(); i++) {
                 if (groupededgesinverse[i].first == label) {
                     edges = groupededgesinverse[i].second;
+                    break;
                 }
             }
         }
@@ -146,9 +148,9 @@ void SimpleEstimator::calculate(uint32_t label, bool inverse) {
         // apply the formula: new noPhts = Tr * Ts / Max(V(R,Y), V(S,Y))
         cardStat1.noPaths = cardStat1.noPaths * edges.size() /  divider;
 
-        //std::cout << "current processing label is: " << label << std::endl;
-        //std::cout << "# of edges with current label is: " << edges.size() << std::endl;
-        //std::cout << "Divider (V(R,Y) or V(S,Y)) is: " << divider << std::endl;
+        std::cout << "current processing label is: " << label << std::endl;
+        std::cout << "# of edges with current label is: " << edges.size() << std::endl;
+        std::cout << "Divider (V(R,Y) or V(S,Y)) is: " << divider << std::endl;
 
         for (int j = 0; j < edgeDistVertCount.size(); ++j) {
             if(edgeDistVertCount[j].first==label){
@@ -158,8 +160,6 @@ void SimpleEstimator::calculate(uint32_t label, bool inverse) {
         }
     }
     else{
-
-        // std::cout << "first processed label is " << label << std::endl;
 
         if(!inverse) {
             for (int j = 0; j < edgeDistVertCount.size(); ++j) {
@@ -187,9 +187,10 @@ void SimpleEstimator::calculate(uint32_t label, bool inverse) {
             }
         }
 
-        if(cardStat1.noIn==0) cardStat1.noIn=1;
-        if(cardStat1.noOut==0) cardStat1.noIn=1;
-        if(cardStat1.noPaths==0) cardStat1.noIn=1;
+        std::cout << "first processed label is " << label << std::endl;
+        std::cout << "# of edges with current label is: " << cardStat1.noPaths << std::endl;
+        std::cout << "noIn is: " << cardStat1.noIn << std::endl;
+        std::cout << "noOut is: " << cardStat1.noOut << std::endl;
     }
 }
 
