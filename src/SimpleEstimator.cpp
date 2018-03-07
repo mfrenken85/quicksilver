@@ -146,7 +146,6 @@ void SimpleEstimator::calculate(uint32_t label, bool inverse) {
         // apply the formula: new noPhts = Tr * Ts / Max(V(R,Y), V(S,Y))
         cardStat1.noPaths = cardStat1.noPaths * edges.size() /  divider;
 
-        // disable print for efficiency.
         //std::cout << "current processing label is: " << label << std::endl;
         //std::cout << "# of edges with current label is: " << edges.size() << std::endl;
         //std::cout << "Divider (V(R,Y) or V(S,Y)) is: " << divider << std::endl;
@@ -160,7 +159,6 @@ void SimpleEstimator::calculate(uint32_t label, bool inverse) {
     }
     else{
 
-        // disable print for efficiency.
         // std::cout << "first processed label is " << label << std::endl;
 
         if(!inverse) {
@@ -188,6 +186,10 @@ void SimpleEstimator::calculate(uint32_t label, bool inverse) {
                 break;
             }
         }
+
+        if(cardStat1.noIn==0) cardStat1.noIn=1;
+        if(cardStat1.noOut==0) cardStat1.noIn=1;
+        if(cardStat1.noPaths==0) cardStat1.noIn=1;
     }
 }
 
