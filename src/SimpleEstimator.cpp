@@ -184,11 +184,11 @@ void SimpleEstimator::calculate(uint32_t label, bool inverse) {
     if( cardStat1.noPaths== 0 ) cardStat1.noPaths = Tr;
     else cardStat1.noPaths = cardStat1.noPaths * Tr /  divider;
 
-    std::cout << std::endl;
-    std::cout << "after processing label: " << label << std::endl;
-    std::cout << "current Ins is: " << cardStat1.noIn << std::endl;
-    std::cout << "current Paths is: " << cardStat1.noPaths << std::endl;
-    std::cout << "current Outs is: " << cardStat1.noOut << std::endl;
+    //std::cout << std::endl;
+    //std::cout << "after processing label: " << label << std::endl;
+    //std::cout << "current Ins is: " << cardStat1.noIn << std::endl;
+    //std::cout << "current Paths is: " << cardStat1.noPaths << std::endl;
+    //std::cout << "current Outs is: " << cardStat1.noOut << std::endl;
 }
 
 void  SimpleEstimator::estimator_aux(RPQTree *q) {
