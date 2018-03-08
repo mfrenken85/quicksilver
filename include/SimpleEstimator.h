@@ -38,7 +38,6 @@ public:
 
     void estimator_aux(RPQTree *q);
     void calculate(uint32_t currentLabel, bool inverse);
-    std::shared_ptr<SimpleGraph> join(std::shared_ptr<SimpleGraph> &left, std::shared_ptr<SimpleGraph> &right);
 };
 
 

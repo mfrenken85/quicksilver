@@ -122,20 +122,21 @@ void SimpleEstimator::calculate(uint32_t label, bool inverse) {
     // which means, divider = Max(V(R,Y), V(S,Y))
     uint32_t noIn = cardStat1.noIn;
     uint32_t divider = 0;
-
+    uint32_t noVIn = histIn[label];
+    uint32_t noVOut = histOut[label];
     // calculate the value of divider (V(S,Y)).
 
     if(!inverse) {
-        divider = histOut[label];
+        divider = noVOut;
         // if this is the first label, update noOut.
-        if( cardStat1.noPaths== 0 ) cardStat1.noOut = histOut[label];
-        cardStat1.noIn = histIn[label];
+        if( cardStat1.noPaths== 0 ) cardStat1.noOut = noVOut;
+        cardStat1.noIn = noVIn;
     }
     else {
-        divider = histIn[label];
+        divider = noVIn;
         // if this is the first label, update noOut.
-        if( cardStat1.noPaths== 0 ) cardStat1.noOut = histIn[label];
-        cardStat1.noIn = histOut[label];
+        if( cardStat1.noPaths== 0 ) cardStat1.noOut = noVIn;
+        cardStat1.noIn = noVOut;
     }
 
     // process the label. Get all edges with this labele and calculate Tr, which is the # of edges.
