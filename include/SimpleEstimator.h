@@ -7,6 +7,8 @@
 
 #include <memory>
 #include <cmath>
+#include <map>
+#include <set>
 #include "Estimator.h"
 #include "SimpleGraph.h"
 #include "RPQTree.h"
@@ -21,6 +23,11 @@ class SimpleEstimator : public Estimator {
     std::vector<std::pair<uint32_t,std::pair<uint32_t,uint32_t>>> edgeDistVertCount;
     // for each element, it has the following format: <label, list of edges with this label>.
     std::vector<std::pair<uint32_t,std::vector<std::pair<uint32_t,uint32_t>>>> groupededges;
+
+    std::set<uint32_t> setLabels;
+    std::map<uint32_t,uint32_t> histLabels;
+    std::map<uint32_t,uint32_t> histIn;
+    std::map<uint32_t,uint32_t> histOut;
 
 public:
     explicit SimpleEstimator(std::shared_ptr<SimpleGraph> &g);

@@ -29,7 +29,37 @@ SimpleEstimator::SimpleEstimator(std::shared_ptr<SimpleGraph> &g){
 void SimpleEstimator::prepare() {
 
     // do your prep here
+    for(int i = 0; i < graph->getNoVertices(); i++) {
+        if (!graph->adj[i].empty()){
+            setLabels.clear();
+            for (int j = 0; j < graph->adj[i].size(); j++ ) {
+                uint32_t label = graph->adj[i][j].first;
+                if (setLabels.find(label)==setLabels.end()) {
+                    setLabels.insert(label);
+                    histOut[label]++;
+                }
 
+                if (histLabels[label]){
+                    histLabels[label]++;
+                } else {
+                    histLabels[label] = 1;
+                }
+            }
+            setLabels.clear();
+        }
+        if (!graph->reverse_adj[i].empty()) {
+            for (int j = 0; j < graph->reverse_adj[i].size(); j++) {
+                uint32_t label = graph->reverse_adj[i][j].first;
+                if (setLabels.find(label) == setLabels.end()) {
+                    setLabels.insert(label);
+                    histIn[label]++;
+                }
+            }
+        }
+    }
+
+
+/*
     // groupe edges based on their labels.
     // for each element, it has the following format:
     // <label, list of <vertices, vertices>>
@@ -79,9 +109,10 @@ void SimpleEstimator::prepare() {
 
     // output
     for (int i = 0; i < groupededges.size(); i++) {
-        std::cout << "label: " << groupededges[i].first  << " encountered times: " << groupededges[i].second.size() << std::endl;
-        std::cout << "label: " << edgeDistVertCount[i].first  << " left distinctVertices times: " << edgeDistVertCount[i].second.first <<  " right distinctVertices times: " << edgeDistVertCount[i].second.second << std::endl;
+        std::cout << "label: " << groupededges[i].first  << " encountered times: " << groupededges[i].second.size() << "(" << histLabels[groupededges[i].first] << ")" <<  std::endl;
+        std::cout << "label: " << edgeDistVertCount[i].first  << " left distinctVertices times: " << edgeDistVertCount[i].second.first << "(" << histOut[edgeDistVertCount[i].first] << ")" <<  " right distinctVertices times: " << edgeDistVertCount[i].second.second << "(" << histIn[edgeDistVertCount[i].first] << ")" << std::endl;
     }
+    */
 }
 
 void SimpleEstimator::calculate(uint32_t label, bool inverse) {
@@ -92,6 +123,24 @@ void SimpleEstimator::calculate(uint32_t label, bool inverse) {
     uint32_t noIn = cardStat1.noIn;
     uint32_t divider = 0;
 
+    // calculate the value of divider (V(S,Y)).
+
+    if(!inverse) {
+        divider = histOut[label];
+        // if this is the first label, update noOut.
+        if( cardStat1.noPaths== 0 ) cardStat1.noOut = histOut[label];
+        cardStat1.noIn = histIn[label];
+    }
+    else {
+        divider = histIn[label];
+        // if this is the first label, update noOut.
+        if( cardStat1.noPaths== 0 ) cardStat1.noOut = histIn[label];
+        cardStat1.noIn = histOut[label];
+    }
+
+    // process the label. Get all edges with this labele and calculate Tr, which is the # of edges.
+    uint32_t Tr = histLabels[label];
+    /*
     // calculate the value of divider (V(S,Y)).
     for (int i = 0; i < edgeDistVertCount.size(); i++) {
         if(edgeDistVertCount[i].first == label){
@@ -120,7 +169,7 @@ void SimpleEstimator::calculate(uint32_t label, bool inverse) {
             break;
         }
     }
-
+    */
     // the value of V(R,Y) = noIns * no of current label / total label.
     // say from the previous step, we have 1000 distinct vertices, i.e cardStat1.noIn = 1000.
     // now we have label 3, assume there are in total 200 labels labeled with 3 out of total 20000 labels.
