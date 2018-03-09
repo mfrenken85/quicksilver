@@ -25,7 +25,6 @@ class SimpleEstimator : public Estimator {
     std::vector<std::pair<uint32_t,std::vector<std::pair<uint32_t,uint32_t>>>> groupededges;
 
     std::set<uint32_t> setInOutLabels;
-    std::set<uint32_t> setHistLabels;
     std::map<uint32_t,uint32_t> histLabels;
     std::map<uint32_t,uint32_t> histIn;
     std::map<uint32_t,uint32_t> histOut;

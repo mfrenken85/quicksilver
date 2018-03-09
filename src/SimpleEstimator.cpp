@@ -29,11 +29,8 @@ SimpleEstimator::SimpleEstimator(std::shared_ptr<SimpleGraph> &g){
 void SimpleEstimator::prepare() {
 
     // do your prep here
-
-
     for(int i = 0; i < graph->getNoVertices(); i++) {
         if (!graph->adj[i].empty()){
-            setInOutLabels.clear();
             for (int j = 0; j < graph->adj[i].size(); j++ ) {
                 uint32_t label = graph->adj[i][j].first;
                 if (setInOutLabels.insert(label).second) {
@@ -41,15 +38,16 @@ void SimpleEstimator::prepare() {
                 }
                 histLabels[label]++;
             }
+            setInOutLabels.clear();
         }
         if (!graph->reverse_adj[i].empty()) {
-            setInOutLabels.clear();
             for (int j = 0; j < graph->reverse_adj[i].size(); j++) {
                 uint32_t label = graph->reverse_adj[i][j].first;
                 if (setInOutLabels.insert(label).second) {
                     histIn[label]++;
                 }
             }
+            setInOutLabels.clear();
         }
     }
 }
@@ -63,6 +61,7 @@ void SimpleEstimator::calculate(uint32_t label, bool inverse) {
     uint32_t divider = 0;
     uint32_t noVIn = histIn[label];
     uint32_t noVOut = histOut[label];
+    uint32_t Tr = histLabels[label];
     // calculate the value of divider (V(S,Y)).
 
     if(!inverse) {
@@ -79,7 +78,6 @@ void SimpleEstimator::calculate(uint32_t label, bool inverse) {
     }
 
     // process the label. Get all edges with this label and calculate Tr, which is the # of edges.
-    uint32_t Tr = histLabels[label];
 
     //uint32_t tempDivider = noIn * Tr / graph->getNoEdges();
     //if( tempDivider > divider) divider = tempDivider;
