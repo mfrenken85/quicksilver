@@ -29,90 +29,29 @@ SimpleEstimator::SimpleEstimator(std::shared_ptr<SimpleGraph> &g){
 void SimpleEstimator::prepare() {
 
     // do your prep here
+
+    
     for(int i = 0; i < graph->getNoVertices(); i++) {
         if (!graph->adj[i].empty()){
-            setLabels.clear();
+            setInOutLabels.clear();
             for (int j = 0; j < graph->adj[i].size(); j++ ) {
                 uint32_t label = graph->adj[i][j].first;
-                if (setLabels.find(label)==setLabels.end()) {
-                    setLabels.insert(label);
+                if (setInOutLabels.insert(label).second) {
                     histOut[label]++;
                 }
-
-                if (histLabels[label]){
-                    histLabels[label]++;
-                } else {
-                    histLabels[label] = 1;
-                }
+                histLabels[label]++;
             }
-            setLabels.clear();
         }
         if (!graph->reverse_adj[i].empty()) {
+            setInOutLabels.clear();
             for (int j = 0; j < graph->reverse_adj[i].size(); j++) {
                 uint32_t label = graph->reverse_adj[i][j].first;
-                if (setLabels.find(label) == setLabels.end()) {
-                    setLabels.insert(label);
+                if (setInOutLabels.insert(label).second) {
                     histIn[label]++;
                 }
             }
         }
     }
-
-
-/*
-    // groupe edges based on their labels.
-    // for each element, it has the following format:
-    // <label, list of <vertices, vertices>>
-    for(int i = 0; i < graph->getNoVertices(); i++) {
-        if (!graph->adj[i].empty()){
-            for (int j = 0; j < graph->adj[i].size(); j++ ) {
-                uint32_t label = graph->adj[i][j].first;
-                // increase the counter if the label is already in the list.
-                bool found = false;
-                for (int k = 0; k < groupededges.size(); k++) {
-                    if(groupededges[k].first == label){
-                        found = true;
-                        groupededges[k].second.emplace_back(std::make_pair(i,graph->adj[i][j].second));
-                        break;
-                    }
-                }
-                // otherwise add that new label into the list.
-                if(!found) {
-                    std::vector<std::pair<uint32_t,uint32_t>> v;
-                    v.emplace_back(std::make_pair (i,graph->adj[i][j].second));
-                    groupededges.emplace_back( std::make_pair(label ,v) );
-                }
-            }
-        }
-    }
-
-    // calculate edgeDistVertCount,
-    // for each element, it has the following format:
-    // <label , <number of distinct vertices, number of distinct vertices>>
-    for (int i = 0; i < groupededges.size(); i++) {
-        std::vector<uint32_t > left;
-        std::vector<uint32_t > right;
-        for (int j = 0; j < groupededges[i].second.size(); ++j) {
-            // if the vertices has not been added before.
-            if ( std::find(left.begin(), left.end(), groupededges[i].second[j].first) == left.end() )
-                left.emplace_back(groupededges[i].second[j].first);
-            // if the vertices has not been added before.
-            if ( std::find(right.begin(), right.end(), groupededges[i].second[j].second) == right.end() )
-                right.emplace_back(groupededges[i].second[j].second);
-        }
-        auto p = std::make_pair(left.size(),right.size());
-        edgeDistVertCount.emplace_back(std::make_pair (groupededges[i].first, p));
-    }
-
-    groupededges.resize(graph->getNoLabels());
-    edgeDistVertCount.resize(graph->getNoLabels());
-
-    // output
-    for (int i = 0; i < groupededges.size(); i++) {
-        std::cout << "label: " << groupededges[i].first  << " encountered times: " << groupededges[i].second.size() << "(" << histLabels[groupededges[i].first] << ")" <<  std::endl;
-        std::cout << "label: " << edgeDistVertCount[i].first  << " left distinctVertices times: " << edgeDistVertCount[i].second.first << "(" << histOut[edgeDistVertCount[i].first] << ")" <<  " right distinctVertices times: " << edgeDistVertCount[i].second.second << "(" << histIn[edgeDistVertCount[i].first] << ")" << std::endl;
-    }
-    */
 }
 
 void SimpleEstimator::calculate(uint32_t label, bool inverse) {
@@ -139,43 +78,9 @@ void SimpleEstimator::calculate(uint32_t label, bool inverse) {
         cardStat1.noIn = noVOut;
     }
 
-    // process the label. Get all edges with this labele and calculate Tr, which is the # of edges.
+    // process the label. Get all edges with this label and calculate Tr, which is the # of edges.
     uint32_t Tr = histLabels[label];
-    /*
-    // calculate the value of divider (V(S,Y)).
-    for (int i = 0; i < edgeDistVertCount.size(); i++) {
-        if(edgeDistVertCount[i].first == label){
-            if(!inverse) {
-                divider = edgeDistVertCount[i].second.first;
-                // if this is the first label, update noOut.
-                if( cardStat1.noPaths== 0 ) cardStat1.noOut = edgeDistVertCount[i].second.first;
-                cardStat1.noIn = edgeDistVertCount[i].second.second;
-                break;
-            }
-            else {
-                divider = edgeDistVertCount[i].second.second;
-                // if this is the first label, update noOut.
-                if( cardStat1.noPaths== 0 ) cardStat1.noOut = edgeDistVertCount[i].second.second;
-                cardStat1.noIn = edgeDistVertCount[i].second.first;
-                break;
-            }
-        }
-    }
 
-    // process the label. Get all edges with this labele and calculate Tr, which is the # of edges.
-    uint32_t Tr = 0;
-    for (int i = 0; i < groupededges.size(); i++) {
-        if (groupededges[i].first == label) {
-            Tr = groupededges[i].second.size();
-            break;
-        }
-    }
-    */
-    // the value of V(R,Y) = noIns * no of current label / total label.
-    // say from the previous step, we have 1000 distinct vertices, i.e cardStat1.noIn = 1000.
-    // now we have label 3, assume there are in total 200 labels labeled with 3 out of total 20000 labels.
-    // so we eastimate V(R,Y) = 1000 * 200 / 20000 = 10.
-    // finally, get the larger value between V(R,Y) and V(S,Y))
     uint32_t tempDivider = noIn * Tr / graph->getNoEdges();
     if( tempDivider > divider) divider = tempDivider;
 

@@ -24,7 +24,8 @@ class SimpleEstimator : public Estimator {
     // for each element, it has the following format: <label, list of edges with this label>.
     std::vector<std::pair<uint32_t,std::vector<std::pair<uint32_t,uint32_t>>>> groupededges;
 
-    std::set<uint32_t> setLabels;
+    std::set<uint32_t> setInOutLabels;
+    std::set<uint32_t> setHistLabels;
     std::map<uint32_t,uint32_t> histLabels;
     std::map<uint32_t,uint32_t> histIn;
     std::map<uint32_t,uint32_t> histOut;
