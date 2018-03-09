@@ -30,7 +30,7 @@ void SimpleEstimator::prepare() {
 
     // do your prep here
 
-    
+
     for(int i = 0; i < graph->getNoVertices(); i++) {
         if (!graph->adj[i].empty()){
             setInOutLabels.clear();
@@ -81,8 +81,8 @@ void SimpleEstimator::calculate(uint32_t label, bool inverse) {
     // process the label. Get all edges with this label and calculate Tr, which is the # of edges.
     uint32_t Tr = histLabels[label];
 
-    uint32_t tempDivider = noIn * Tr / graph->getNoEdges();
-    if( tempDivider > divider) divider = tempDivider;
+    //uint32_t tempDivider = noIn * Tr / graph->getNoEdges();
+    //if( tempDivider > divider) divider = tempDivider;
 
     //Ts = current cardStat1.noPaths
     // apply the formula: new noPhts = Tr * Ts / Max(V(R,Y), V(S,Y))
