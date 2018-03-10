@@ -77,6 +77,7 @@ void SimpleEstimator::calculate(uint32_t label, bool inverse) {
             cardStat2.noPaths = cardStat2.noPaths * noLabels / std::max(noIn, cardStat2.noIn);
             cardStat2.noIn = std::min(cardStat2.noPaths,noOut);
         }
+        cardStat2.noOut= std::min(cardStat2.noPaths,noOut);
     }
     /*
     // apply the formula.
