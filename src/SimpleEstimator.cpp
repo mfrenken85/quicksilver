@@ -73,7 +73,7 @@ void SimpleEstimator::calculate(uint32_t label, bool inverse) {
         else {
             cardStat2.noPaths = cardStat2.noPaths * histLabels[label] / std::max(histIn[label], cardStat2.noIn);
         }
-        cardStat2.noIn = std::min(cardStat2.noPaths,histOut[label]);
+        cardStat2.noIn = std::min(cardStat2.noPaths,histIn[label]);
     }
     // apply the formula.
     // because we are trying to get the min value of (Ts * Tr / divider), so we choose the larger divider,
