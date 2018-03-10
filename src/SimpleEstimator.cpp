@@ -53,27 +53,29 @@ void SimpleEstimator::prepare() {
 }
 
 void SimpleEstimator::calculate(uint32_t label, bool inverse) {
-
+    uint32_t noIn = histIn[label];
+    uint32_t noOut = histOut[label];
+    uint32_t noLabels = histLabels[label];
     if (cardStat2.noPaths == -1) {
         // case first label checked
         if(!inverse) {
-            cardStat2.noIn = histIn[label];
-            cardStat2.noOut= histOut[label];
-            cardStat2.noPaths = histLabels[label];
+            cardStat2.noIn = noIn;
+            cardStat2.noOut= noOut;
+            cardStat2.noPaths = noLabels;
         }
         else {
-            cardStat2.noIn = histOut[label];
-            cardStat2.noOut= histIn[label];
-            cardStat2.noPaths = histLabels[label];
+            cardStat2.noIn = noOut;
+            cardStat2.noOut= noIn;
+            cardStat2.noPaths = noLabels;
         }
     } else {
         if(!inverse) {
-            cardStat2.noPaths = cardStat2.noPaths * histLabels[label] / std::max(histIn[label], cardStat2.noIn);
-            cardStat2.noIn = std::min(cardStat2.noPaths,histIn[label]);
+            cardStat2.noPaths = cardStat2.noPaths * noLabels / std::max(noIn, cardStat2.noIn);
+            cardStat2.noIn = std::min(cardStat2.noPaths,noIn);
         }
         else {
-            cardStat2.noPaths = cardStat2.noPaths * histLabels[label] / std::max(histOut[label], cardStat2.noIn);
-            cardStat2.noIn = std::min(cardStat2.noPaths,histOut[label]);
+            cardStat2.noPaths = cardStat2.noPaths * noLabels / std::max(noOut, cardStat2.noIn);
+            cardStat2.noIn = std::min(cardStat2.noPaths,noOut);
         }
     }
     /*
