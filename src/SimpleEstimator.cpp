@@ -70,11 +70,11 @@ void SimpleEstimator::calculate(uint32_t label, bool inverse) {
         }
     } else {
         if(!inverse) {
-            cardStat2.noPaths = cardStat2.noPaths * noLabels / std::max(noIn, cardStat2.noIn);
+            cardStat2.noPaths = cardStat2.noPaths * noLabels / std::max(noOut, cardStat2.noIn);
             cardStat2.noIn = std::min(cardStat2.noPaths,noIn);
         }
         else {
-            cardStat2.noPaths = cardStat2.noPaths * noLabels / std::max(noOut, cardStat2.noIn);
+            cardStat2.noPaths = cardStat2.noPaths * noLabels / std::max(noIn, cardStat2.noIn);
             cardStat2.noIn = std::min(cardStat2.noPaths,noOut);
         }
     }
