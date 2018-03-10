@@ -75,6 +75,7 @@ void SimpleEstimator::calculate(uint32_t label, bool inverse) {
         }
         cardStat2.noIn = std::min(cardStat2.noPaths,histIn[label]);
     }
+    /*
     // apply the formula.
     // because we are trying to get the min value of (Ts * Tr / divider), so we choose the larger divider,
     // which means, divider = Max(V(R,Y), V(S,Y))
@@ -113,6 +114,7 @@ void SimpleEstimator::calculate(uint32_t label, bool inverse) {
     //std::cout << "current Ins is: " << cardStat1.noIn << std::endl;
     //std::cout << "current Paths is: " << cardStat1.noPaths << std::endl;
     //std::cout << "current Outs is: " << cardStat1.noOut << std::endl;
+     */
 }
 
 void  SimpleEstimator::estimator_aux(RPQTree *q) {
@@ -154,9 +156,9 @@ void  SimpleEstimator::estimator_aux(RPQTree *q) {
 
 cardStat SimpleEstimator::estimate(RPQTree *query) {
 
-    cardStat1.noIn = 0;
-    cardStat1.noOut= 0;
-    cardStat1.noPaths = 0;
+    //cardStat1.noIn = 0;
+    //cardStat1.noOut= 0;
+    //cardStat1.noPaths = 0;
 
     cardStat2.noIn = -1;
     cardStat2.noOut= -1;
