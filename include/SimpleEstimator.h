@@ -17,6 +17,7 @@
 class SimpleEstimator : public Estimator {
 
     cardStat cardStat1{};
+    cardStat cardStat2{};
     std::shared_ptr<SimpleGraph> graph;
 
     // for each element, it has the following format: <label, <left distinct vertices count, right distinct vertices count>>.
