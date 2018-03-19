@@ -17,9 +17,19 @@
 class SimpleEstimator : public Estimator {
 
     cardStat cardStat1{};
+    cardStat cardStat2{};
     std::shared_ptr<SimpleGraph> graph;
 
+<<<<<<< HEAD
     std::set<uint32_t> setLabels;
+=======
+    // for each element, it has the following format: <label, <left distinct vertices count, right distinct vertices count>>.
+    std::vector<std::pair<uint32_t,std::pair<uint32_t,uint32_t>>> edgeDistVertCount;
+    // for each element, it has the following format: <label, list of edges with this label>.
+    std::vector<std::pair<uint32_t,std::vector<std::pair<uint32_t,uint32_t>>>> groupededges;
+
+    std::set<uint32_t> setInOutLabels;
+>>>>>>> 3e26e223be61b682414a0b0ab11e91d1df5b2dab
     std::map<uint32_t,uint32_t> histLabels;
     std::map<uint32_t,uint32_t> histIn;
     std::map<uint32_t,uint32_t> histOut;

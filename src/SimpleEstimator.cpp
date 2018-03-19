@@ -31,32 +31,36 @@ void SimpleEstimator::prepare() {
     // do your prep here
     for(int i = 0; i < graph->getNoVertices(); i++) {
         if (!graph->adj[i].empty()){
-            setLabels.clear();
             for (int j = 0; j < graph->adj[i].size(); j++ ) {
                 uint32_t label = graph->adj[i][j].first;
-                if (setLabels.find(label)==setLabels.end()) {
-                    setLabels.insert(label);
+                if (setInOutLabels.insert(label).second) {
                     histOut[label]++;
                 }
+<<<<<<< HEAD
                 if (histLabels[label]){
                     histLabels[label]++;
                 } else {
                     histLabels[label] = 1;
                 }
+=======
+                histLabels[label]++;
+>>>>>>> 3e26e223be61b682414a0b0ab11e91d1df5b2dab
             }
-            setLabels.clear();
+            setInOutLabels.clear();
         }
         if (!graph->reverse_adj[i].empty()) {
             for (int j = 0; j < graph->reverse_adj[i].size(); j++) {
                 uint32_t label = graph->reverse_adj[i][j].first;
-                if (setLabels.find(label) == setLabels.end()) {
-                    setLabels.insert(label);
+                if (setInOutLabels.insert(label).second) {
                     histIn[label]++;
                 }
             }
+            setInOutLabels.clear();
         }
     }
+}
 
+<<<<<<< HEAD
     for (int i = 0; i < histLabels.size(); ++i) {
         labelCardStats.emplace(i , cardStat {histOut[i], histLabels[i], histIn[i]});
     }
@@ -64,13 +68,43 @@ void SimpleEstimator::prepare() {
 
 void SimpleEstimator::calculate(uint32_t label, bool inverse) {
 
+=======
+void SimpleEstimator::calculate(uint32_t label, bool inverse) {
+    uint32_t noIn = histIn[label];
+    uint32_t noOut = histOut[label];
+    uint32_t noLabels = histLabels[label];
+    if (cardStat2.noPaths == -1) {
+        // case first label checked
+        if(!inverse) {
+            cardStat2.noIn = noIn;
+            cardStat2.noOut= noOut;
+            cardStat2.noPaths = noLabels;
+        }
+        else {
+            cardStat2.noIn = noOut;
+            cardStat2.noOut= noIn;
+            cardStat2.noPaths = noLabels;
+        }
+    } else {
+        if(!inverse) {
+            cardStat2.noPaths = cardStat2.noPaths * noLabels / std::max(noOut, cardStat2.noIn);
+            cardStat2.noIn = std::min(cardStat2.noPaths,noIn);
+        }
+        else {
+            cardStat2.noPaths = cardStat2.noPaths * noLabels / std::max(noIn, cardStat2.noIn);
+            cardStat2.noIn = std::min(cardStat2.noPaths,noOut);
+        }
+        cardStat2.noOut= std::min(cardStat2.noPaths,cardStat2.noOut);
+    }
+    /*
+>>>>>>> 3e26e223be61b682414a0b0ab11e91d1df5b2dab
     // apply the formula.
     // because we are trying to get the min value of (Ts * Tr / divider), so we choose the larger divider,
     // which means, divider = Max(V(R,Y), V(S,Y))
-    uint32_t noIn = cardStat1.noIn;
     uint32_t divider = 0;
     uint32_t noVIn = histIn[label];
     uint32_t noVOut = histOut[label];
+    uint32_t Tr = histLabels[label];
     // calculate the value of divider (V(S,Y)).
 
     if(!inverse) {
@@ -86,45 +120,10 @@ void SimpleEstimator::calculate(uint32_t label, bool inverse) {
         cardStat1.noIn = noVOut;
     }
 
-    // process the label. Get all edges with this labele and calculate Tr, which is the # of edges.
-    uint32_t Tr = histLabels[label];
-    /*
-    // calculate the value of divider (V(S,Y)).
-    for (int i = 0; i < edgeDistVertCount.size(); i++) {
-        if(edgeDistVertCount[i].first == label){
-            if(!inverse) {
-                divider = edgeDistVertCount[i].second.first;
-                // if this is the first label, update noOut.
-                if( cardStat1.noPaths== 0 ) cardStat1.noOut = edgeDistVertCount[i].second.first;
-                cardStat1.noIn = edgeDistVertCount[i].second.second;
-                break;
-            }
-            else {
-                divider = edgeDistVertCount[i].second.second;
-                // if this is the first label, update noOut.
-                if( cardStat1.noPaths== 0 ) cardStat1.noOut = edgeDistVertCount[i].second.second;
-                cardStat1.noIn = edgeDistVertCount[i].second.first;
-                break;
-            }
-        }
-    }
+    // process the label. Get all edges with this label and calculate Tr, which is the # of edges.
 
-    // process the label. Get all edges with this labele and calculate Tr, which is the # of edges.
-    uint32_t Tr = 0;
-    for (int i = 0; i < groupededges.size(); i++) {
-        if (groupededges[i].first == label) {
-            Tr = groupededges[i].second.size();
-            break;
-        }
-    }
-    */
-    // the value of V(R,Y) = noIns * no of current label / total label.
-    // say from the previous step, we have 1000 distinct vertices, i.e cardStat1.noIn = 1000.
-    // now we have label 3, assume there are in total 200 labels labeled with 3 out of total 20000 labels.
-    // so we eastimate V(R,Y) = 1000 * 200 / 20000 = 10.
-    // finally, get the larger value between V(R,Y) and V(S,Y))
-    uint32_t tempDivider = noIn * Tr / graph->getNoEdges();
-    if( tempDivider > divider) divider = tempDivider;
+    //uint32_t tempDivider = noIn * Tr / graph->getNoEdges();
+    //if( tempDivider > divider) divider = tempDivider;
 
     //Ts = current cardStat1.noPaths
     // apply the formula: new noPhts = Tr * Ts / Max(V(R,Y), V(S,Y))
@@ -137,6 +136,7 @@ void SimpleEstimator::calculate(uint32_t label, bool inverse) {
     //std::cout << "current Ins is: " << cardStat1.noIn << std::endl;
     //std::cout << "current Paths is: " << cardStat1.noPaths << std::endl;
     //std::cout << "current Outs is: " << cardStat1.noOut << std::endl;
+     */
 }
 
 void  SimpleEstimator::estimator_aux(RPQTree *q) {
@@ -175,12 +175,17 @@ cardStat SimpleEstimator::reverse(cardStat c) {
 
 cardStat SimpleEstimator::estimate(RPQTree *query) {
 
-    cardStat1.noIn = 0;
-    cardStat1.noOut= 0;
-    cardStat1.noPaths = 0;
+    //cardStat1.noIn = 0;
+    //cardStat1.noOut= 0;
+    //cardStat1.noPaths = 0;
+
+    cardStat2.noIn = -1;
+    cardStat2.noOut= -1;
+    cardStat2.noPaths = -1;
 
     // perform your estimation here
     estimator_aux(query);
+<<<<<<< HEAD
     //return cardStat1;
 
     if(parsedQuery.size()==0)
@@ -224,4 +229,7 @@ cardStat SimpleEstimator::estimate(RPQTree *query) {
         return card;
     }
 
+=======
+    return cardStat2;
+>>>>>>> 3e26e223be61b682414a0b0ab11e91d1df5b2dab
 }
