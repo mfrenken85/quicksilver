@@ -29,34 +29,6 @@ SimpleEstimator::SimpleEstimator(std::shared_ptr<SimpleGraph> &g){
 void SimpleEstimator::prepare() {
 
     // do your prep here
-    /*
-    for(int i = 0; i < graph->getNoVertices(); i++) {
-        if (!graph->adj[i].empty()){
-            for (int j = 0; j < graph->adj[i].size(); j++ ) {
-                uint32_t label = graph->adj[i][j].first;
-                if (setLabels.insert(label).second) {
-                    histOut[label]++;
-                }
-                if (histLabels[label]){
-                    histLabels[label]++;
-                } else {
-                    histLabels[label] = 1;
-                }
-                histLabels[label]++;
-            }
-            setLabels.clear();
-        }
-        if (!graph->reverse_adj[i].empty()) {
-            for (int j = 0; j < graph->reverse_adj[i].size(); j++) {
-                uint32_t label = graph->reverse_adj[i][j].first;
-                if (setLabels.insert(label).second) {
-                    histIn[label]++;
-                }
-            }
-            setLabels.clear();
-        }
-    }
-    */
 
     for(int i = 0; i < graph->getNoVertices(); i++) {
         if (!graph->adj[i].empty()){
@@ -70,7 +42,7 @@ void SimpleEstimator::prepare() {
                 } else {
                     histLabels[label] = 1;
                 }
-                histLabels[label]++;
+                // histLabels[label]++;
             }
             setLabels.clear();
         }
@@ -239,8 +211,8 @@ cardStat SimpleEstimator::estimate(RPQTree *query) {
                 next = labelCardStats[parsedQuery[i].first];
             else next = reverse(labelCardStats[parsedQuery[i].first]);
 
-            uint32_t in = card.noIn;// * next.noPaths / graph->getNoEdges();
-            uint32_t out = next.noOut;// * card.noPaths / graph->getNoEdges();
+            uint32_t in = card.noIn * next.noPaths / graph->getNoEdges();
+            uint32_t out = next.noOut * card.noPaths / graph->getNoEdges();
             uint32_t divider = std::max(in, out);
             uint32_t noPaths = card.noPaths * next.noPaths / divider;
             card = cardStat{next.noOut, noPaths, card.noIn};
