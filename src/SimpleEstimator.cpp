@@ -58,7 +58,7 @@ void SimpleEstimator::prepare() {
     }
 
     for (int i = 0; i < histLabels.size(); ++i) {
-        labelCardStats.emplace(i , cardStat {histOut[i], histLabels[i], histIn[i]});
+        labelCardStats.emplace(i , cardStat { histOut[i], histLabels[i], histIn[i]} );
     }
 }
 
@@ -162,8 +162,8 @@ void  SimpleEstimator::estimator_aux(RPQTree *q) {
     }
 }
 
-cardStat SimpleEstimator::reverse(cardStat c) {
-    return {c.noIn, c.noPaths, c.noOut};
+cardStat SimpleEstimator::reverse(cardStat card) {
+    return {card.noIn, card.noPaths, card.noOut};
 }
 
 cardStat SimpleEstimator::estimate(RPQTree *query) {
@@ -204,15 +204,15 @@ cardStat SimpleEstimator::estimate(RPQTree *query) {
             card = labelCardStats[parsedQuery[0].first];
         else card = reverse(labelCardStats[parsedQuery[0].first]);
 
-        for(int i=1; i<parsedQuery.size();i++)
+        for(int i = 1; i<parsedQuery.size();i++)
         {
             cardStat next;
             if(parsedQuery[i].second == '+')
                 next = labelCardStats[parsedQuery[i].first];
             else next = reverse(labelCardStats[parsedQuery[i].first]);
 
-            uint32_t in = card.noIn / 2; // * next.noPaths / graph->getNoEdges();
-            uint32_t out = next.noOut / 2; // * card.noPaths / graph->getNoEdges();
+            uint32_t in = next.noIn; // * next.noPaths / graph->getNoEdges();
+            uint32_t out = card.noOut; // * card.noPaths / graph->getNoEdges();
             uint32_t divider = std::max(in, out);
             uint32_t noPaths = card.noPaths * next.noPaths / divider;
             card = cardStat{ next.noOut, noPaths, card.noIn };

@@ -43,7 +43,7 @@ public:
 
     void estimator_aux(RPQTree *q);
     void calculate(uint32_t currentLabel, bool inverse);
-    cardStat reverse(cardStat c);
+    cardStat reverse(cardStat card);
 };
 
 
