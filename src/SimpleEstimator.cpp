@@ -187,15 +187,15 @@ cardStat SimpleEstimator::estimate(RPQTree *query) {
     }
     else if(parsedQuery.size()==1)
     {
-        cardStat c;
+        cardStat card;
         if(parsedQuery[0].second == '+'){
-            c = labelCardStats[parsedQuery[0].first];
+            card = labelCardStats[parsedQuery[0].first];
         }
         else{
-            c = reverse(labelCardStats[parsedQuery[0].first]);
+            card = reverse(labelCardStats[parsedQuery[0].first]);
         }
         parsedQuery.clear();
-        return  c;
+        return  card;
     }
     else
     {
@@ -211,11 +211,11 @@ cardStat SimpleEstimator::estimate(RPQTree *query) {
                 next = labelCardStats[parsedQuery[i].first];
             else next = reverse(labelCardStats[parsedQuery[i].first]);
 
-            uint32_t in = card.noIn; // * next.noPaths / graph->getNoEdges();
+            uint32_t in = card.noIn * card.noPaths / graph->getNoEdges();
             uint32_t out = next.noOut; // * card.noPaths / graph->getNoEdges();
             uint32_t divider = std::max(in, out);
             uint32_t noPaths = card.noPaths * next.noPaths / divider;
-            card = cardStat{next.noOut, noPaths, card.noIn};
+            card = cardStat{ next.noOut, noPaths, card.noIn };
         }
         parsedQuery.clear();
         return card;
