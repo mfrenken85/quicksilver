@@ -46,7 +46,6 @@ void SimpleEstimator::prepare() {
                 } else {
                     histLabels[label] = 1;
                 }
-                // histLabels[label]++;
             }
             setLabels.clear();
         }
@@ -64,76 +63,6 @@ void SimpleEstimator::prepare() {
     for (int i = 0; i < histLabels.size(); ++i) {
         labelCardStats.emplace(i , cardStat { histOut[i], histLabels[i], histIn[i]} );
     }
-}
-
-void SimpleEstimator::calculate(uint32_t label, bool inverse) {
-    /*
-    uint32_t noIn = histIn[label];
-    uint32_t noOut = histOut[label];
-    uint32_t noLabels = histLabels[label];
-    if (cardStat2.noPaths == -1) {
-        // case first label checked
-        if(!inverse) {
-            cardStat2.noIn = noIn;
-            cardStat2.noOut= noOut;
-            cardStat2.noPaths = noLabels;
-        }
-        else {
-            cardStat2.noIn = noOut;
-            cardStat2.noOut= noIn;
-            cardStat2.noPaths = noLabels;
-        }
-    } else {
-        if(!inverse) {
-            cardStat2.noPaths = cardStat2.noPaths * noLabels / std::max(noOut, cardStat2.noIn);
-            cardStat2.noIn = std::min(cardStat2.noPaths,noIn);
-        }
-        else {
-            cardStat2.noPaths = cardStat2.noPaths * noLabels / std::max(noIn, cardStat2.noIn);
-            cardStat2.noIn = std::min(cardStat2.noPaths,noOut);
-        }
-        cardStat2.noOut= std::min(cardStat2.noPaths,cardStat2.noOut);
-    }
-    /*
-    // apply the formula.
-    // because we are trying to get the min value of (Ts * Tr / divider), so we choose the larger divider,
-    // which means, divider = Max(V(R,Y), V(S,Y))
-    uint32_t divider = 0;
-    uint32_t noVIn = histIn[label];
-    uint32_t noVOut = histOut[label];
-    uint32_t Tr = histLabels[label];
-    // calculate the value of divider (V(S,Y)).
-
-    if(!inverse) {
-        divider = noVOut;
-        // if this is the first label, update noOut.
-        if( cardStat1.noPaths== 0 ) cardStat1.noOut = noVOut;
-        cardStat1.noIn = noVIn;
-    }
-    else {
-        divider = noVIn;
-        // if this is the first label, update noOut.
-        if( cardStat1.noPaths== 0 ) cardStat1.noOut = noVIn;
-        cardStat1.noIn = noVOut;
-    }
-
-    // process the label. Get all edges with this label and calculate Tr, which is the # of edges.
-
-    //uint32_t tempDivider = noIn * Tr / graph->getNoEdges();
-    //if( tempDivider > divider) divider = tempDivider;
-
-    //Ts = current cardStat1.noPaths
-    // apply the formula: new noPhts = Tr * Ts / Max(V(R,Y), V(S,Y))
-    // if this is the first label, update noOut.
-    if( cardStat1.noPaths== 0 ) cardStat1.noPaths = Tr;
-    else cardStat1.noPaths = cardStat1.noPaths * Tr /  divider;
-
-    //std::cout << std::endl;
-    //std::cout << "after processing label: " << label << std::endl;
-    //std::cout << "current Ins is: " << cardStat1.noIn << std::endl;
-    //std::cout << "current Paths is: " << cardStat1.noPaths << std::endl;
-    //std::cout << "current Outs is: " << cardStat1.noOut << std::endl;
-     */
 }
 
 void  SimpleEstimator::estimator_aux(RPQTree *q) {
@@ -172,17 +101,7 @@ cardStat SimpleEstimator::reverse(cardStat card) {
 
 cardStat SimpleEstimator::estimate(RPQTree *query) {
 
-    //cardStat1.noIn = 0;
-    //cardStat1.noOut= 0;
-    //cardStat1.noPaths = 0;
-
-    //cardStat2.noIn = -1;
-    //cardStat2.noOut= -1;
-    //cardStat2.noPaths = -1;
-
-    // perform your estimation here
     estimator_aux(query);
-    //return cardStat1;
 
     if(parsedQuery.size()==0)
     {

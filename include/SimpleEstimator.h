@@ -16,15 +16,7 @@
 
 class SimpleEstimator : public Estimator {
 
-    //cardStat cardStat1{};
-    //cardStat cardStat2{};
     std::shared_ptr<SimpleGraph> graph;
-
-    //std::set<uint32_t> setLabels;
-    // for each element, it has the following format: <label, <left distinct vertices count, right distinct vertices count>>.
-    //std::vector<std::pair<uint32_t,std::pair<uint32_t,uint32_t>>> edgeDistVertCount;
-    // for each element, it has the following format: <label, list of edges with this label>.
-    //std::vector<std::pair<uint32_t,std::vector<std::pair<uint32_t,uint32_t>>>> groupededges;
 
     std::set<uint32_t> setLabels;
     std::map<uint32_t,uint32_t> histLabels;
@@ -41,8 +33,7 @@ public:
     void prepare() override ;
     cardStat estimate(RPQTree *q) override ;
 
-    void estimator_aux(RPQTree *q);
-    void calculate(uint32_t currentLabel, bool inverse);
+    void estimator_aux(RPQTree *q);;
     cardStat reverse(cardStat card);
 };
 
