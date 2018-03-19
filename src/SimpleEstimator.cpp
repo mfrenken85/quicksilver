@@ -70,7 +70,7 @@ void SimpleEstimator::prepare() {
                 } else {
                     histLabels[label] = 1;
                 }
-                //histLabels[label]++;
+                histLabels[label]++;
             }
             setLabels.clear();
         }
