@@ -38,7 +38,6 @@ void SimpleEstimator::prepare() {
                     setLabels.insert(label);
                     histOut[label]++;
                 }
-
                 if (histLabels[label]){
                     histLabels[label]++;
                 } else {
@@ -58,61 +57,9 @@ void SimpleEstimator::prepare() {
         }
     }
 
-
-/*
-    // groupe edges based on their labels.
-    // for each element, it has the following format:
-    // <label, list of <vertices, vertices>>
-    for(int i = 0; i < graph->getNoVertices(); i++) {
-        if (!graph->adj[i].empty()){
-            for (int j = 0; j < graph->adj[i].size(); j++ ) {
-                uint32_t label = graph->adj[i][j].first;
-                // increase the counter if the label is already in the list.
-                bool found = false;
-                for (int k = 0; k < groupededges.size(); k++) {
-                    if(groupededges[k].first == label){
-                        found = true;
-                        groupededges[k].second.emplace_back(std::make_pair(i,graph->adj[i][j].second));
-                        break;
-                    }
-                }
-                // otherwise add that new label into the list.
-                if(!found) {
-                    std::vector<std::pair<uint32_t,uint32_t>> v;
-                    v.emplace_back(std::make_pair (i,graph->adj[i][j].second));
-                    groupededges.emplace_back( std::make_pair(label ,v) );
-                }
-            }
-        }
+    for (int i = 0; i < histLabels.size(); ++i) {
+        labelCardStats.emplace(i , cardStat {histOut[i], histLabels[i], histIn[i]});
     }
-
-    // calculate edgeDistVertCount,
-    // for each element, it has the following format:
-    // <label , <number of distinct vertices, number of distinct vertices>>
-    for (int i = 0; i < groupededges.size(); i++) {
-        std::vector<uint32_t > left;
-        std::vector<uint32_t > right;
-        for (int j = 0; j < groupededges[i].second.size(); ++j) {
-            // if the vertices has not been added before.
-            if ( std::find(left.begin(), left.end(), groupededges[i].second[j].first) == left.end() )
-                left.emplace_back(groupededges[i].second[j].first);
-            // if the vertices has not been added before.
-            if ( std::find(right.begin(), right.end(), groupededges[i].second[j].second) == right.end() )
-                right.emplace_back(groupededges[i].second[j].second);
-        }
-        auto p = std::make_pair(left.size(),right.size());
-        edgeDistVertCount.emplace_back(std::make_pair (groupededges[i].first, p));
-    }
-
-    groupededges.resize(graph->getNoLabels());
-    edgeDistVertCount.resize(graph->getNoLabels());
-
-    // output
-    for (int i = 0; i < groupededges.size(); i++) {
-        std::cout << "label: " << groupededges[i].first  << " encountered times: " << groupededges[i].second.size() << "(" << histLabels[groupededges[i].first] << ")" <<  std::endl;
-        std::cout << "label: " << edgeDistVertCount[i].first  << " left distinctVertices times: " << edgeDistVertCount[i].second.first << "(" << histOut[edgeDistVertCount[i].first] << ")" <<  " right distinctVertices times: " << edgeDistVertCount[i].second.second << "(" << histIn[edgeDistVertCount[i].first] << ")" << std::endl;
-    }
-    */
 }
 
 void SimpleEstimator::calculate(uint32_t label, bool inverse) {
@@ -194,39 +141,36 @@ void SimpleEstimator::calculate(uint32_t label, bool inverse) {
 
 void  SimpleEstimator::estimator_aux(RPQTree *q) {
 
-    // evaluate according to the AST bottom-up
-
     if(q->isLeaf()) {
         // project out the label in the AST
         std::regex directLabel (R"((\d+)\+)");
         std::regex inverseLabel (R"((\d+)\-)");
-
         std::smatch matches;
 
         uint32_t label;
-        bool inverse;
+        char inverse;
 
         if(std::regex_search(q->data, matches, directLabel)) {
             label = (uint32_t) std::stoul(matches[1]);
-            inverse = false;
+            inverse = '+';
         } else if(std::regex_search(q->data, matches, inverseLabel)) {
             label = (uint32_t) std::stoul(matches[1]);
-            inverse = true;
+            inverse = '-';
         } else {
             std::cerr << "Label parsing failed!" << std::endl;
         }
-        SimpleEstimator::calculate(label, inverse);
+        parsedQuery.push_back(std::make_pair(label, inverse));
+        //SimpleEstimator::calculate(label, inverse);
     }
 
     if(q->isConcat()) {
-        // evaluate the children
-        // processing the labels from left to right.
         SimpleEstimator::estimator_aux(q->left);
         SimpleEstimator::estimator_aux(q->right);
-
-        // Possible alternative solution.
-        // Processing the labels from the Right to Left.
     }
+}
+
+cardStat SimpleEstimator::reverse(cardStat c) {
+    return {c.noIn, c.noPaths, c.noOut};
 }
 
 cardStat SimpleEstimator::estimate(RPQTree *query) {
@@ -237,5 +181,47 @@ cardStat SimpleEstimator::estimate(RPQTree *query) {
 
     // perform your estimation here
     estimator_aux(query);
-    return cardStat1;
+    //return cardStat1;
+
+    if(parsedQuery.size()==0)
+    {
+        parsedQuery.clear();
+        return cardStat{0,0,0};
+    }
+    else if(parsedQuery.size()==1)
+    {
+        cardStat c;
+        if(parsedQuery[0].second == '+'){
+            c = labelCardStats[parsedQuery[0].first];
+        }
+        else{
+            c = reverse(labelCardStats[parsedQuery[0].first]);
+        }
+        parsedQuery.clear();
+        return  c;
+    }
+    else
+    {
+        cardStat card;
+        if(parsedQuery[0].second == '+')
+            card = labelCardStats[parsedQuery[0].first];
+        else card = reverse(labelCardStats[parsedQuery[0].first]);
+
+        for(int i=1; i<parsedQuery.size();i++)
+        {
+            cardStat next;
+            if(parsedQuery[i].second == '+')
+                next = labelCardStats[parsedQuery[i].first];
+            else next = reverse(labelCardStats[parsedQuery[i].first]);
+
+            uint32_t in = card.noIn * next.noPaths / graph->getNoEdges();
+            uint32_t out = next.noOut * card.noPaths / graph->getNoEdges();
+            uint32_t divider = std::max(in, out);
+            uint32_t noPaths = card.noPaths * next.noPaths / divider;
+            card = cardStat{next.noOut, noPaths, card.noIn};
+        }
+        parsedQuery.clear();
+        return card;
+    }
+
 }

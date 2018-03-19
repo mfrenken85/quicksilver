@@ -19,15 +19,13 @@ class SimpleEstimator : public Estimator {
     cardStat cardStat1{};
     std::shared_ptr<SimpleGraph> graph;
 
-    // for each element, it has the following format: <label, <left distinct vertices count, right distinct vertices count>>.
-    std::vector<std::pair<uint32_t,std::pair<uint32_t,uint32_t>>> edgeDistVertCount;
-    // for each element, it has the following format: <label, list of edges with this label>.
-    std::vector<std::pair<uint32_t,std::vector<std::pair<uint32_t,uint32_t>>>> groupededges;
-
     std::set<uint32_t> setLabels;
     std::map<uint32_t,uint32_t> histLabels;
     std::map<uint32_t,uint32_t> histIn;
     std::map<uint32_t,uint32_t> histOut;
+
+    std::map<uint32_t,cardStat> labelCardStats;
+    std::vector<std::pair<uint32_t, char>> parsedQuery;
 
 public:
     explicit SimpleEstimator(std::shared_ptr<SimpleGraph> &g);
@@ -38,6 +36,7 @@ public:
 
     void estimator_aux(RPQTree *q);
     void calculate(uint32_t currentLabel, bool inverse);
+    cardStat reverse(cardStat c);
 };
 
 
