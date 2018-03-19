@@ -36,15 +36,12 @@ void SimpleEstimator::prepare() {
                 if (setInOutLabels.insert(label).second) {
                     histOut[label]++;
                 }
-<<<<<<< HEAD
                 if (histLabels[label]){
                     histLabels[label]++;
                 } else {
                     histLabels[label] = 1;
                 }
-=======
                 histLabels[label]++;
->>>>>>> 3e26e223be61b682414a0b0ab11e91d1df5b2dab
             }
             setInOutLabels.clear();
         }
@@ -58,17 +55,11 @@ void SimpleEstimator::prepare() {
             setInOutLabels.clear();
         }
     }
-}
-
-<<<<<<< HEAD
     for (int i = 0; i < histLabels.size(); ++i) {
         labelCardStats.emplace(i , cardStat {histOut[i], histLabels[i], histIn[i]});
     }
 }
 
-void SimpleEstimator::calculate(uint32_t label, bool inverse) {
-
-=======
 void SimpleEstimator::calculate(uint32_t label, bool inverse) {
     uint32_t noIn = histIn[label];
     uint32_t noOut = histOut[label];
@@ -185,7 +176,6 @@ cardStat SimpleEstimator::estimate(RPQTree *query) {
 
     // perform your estimation here
     estimator_aux(query);
-<<<<<<< HEAD
     //return cardStat1;
 
     if(parsedQuery.size()==0)
@@ -228,8 +218,4 @@ cardStat SimpleEstimator::estimate(RPQTree *query) {
         parsedQuery.clear();
         return card;
     }
-
-=======
-    return cardStat2;
->>>>>>> 3e26e223be61b682414a0b0ab11e91d1df5b2dab
 }
