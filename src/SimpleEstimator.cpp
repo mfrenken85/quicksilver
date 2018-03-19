@@ -155,8 +155,8 @@ void  SimpleEstimator::estimator_aux(RPQTree *q) {
     }
 
     if(q->isConcat()) {
-        SimpleEstimator::estimator_aux(q->left);
         SimpleEstimator::estimator_aux(q->right);
+        SimpleEstimator::estimator_aux(q->left);
     }
 }
 
