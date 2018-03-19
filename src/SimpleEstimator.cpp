@@ -16,6 +16,10 @@
 // Possible alternative solution.
 // Processing the labels from the Right to Left.
 
+// Jiaqi Ni
+// 2018 03 19
+// Simplified the code.
+
 #include <cmath>
 #include "SimpleGraph.h"
 #include "SimpleEstimator.h"
@@ -211,8 +215,8 @@ cardStat SimpleEstimator::estimate(RPQTree *query) {
                 next = labelCardStats[parsedQuery[i].first];
             else next = reverse(labelCardStats[parsedQuery[i].first]);
 
-            uint32_t in = card.noIn / 2; // * next.noPaths / graph->getNoEdges();
-            uint32_t out = next.noOut / 2; // * card.noPaths / graph->getNoEdges();
+            uint32_t in = card.noIn; // * next.noPaths / graph->getNoEdges();
+            uint32_t out = next.noOut; // * card.noPaths / graph->getNoEdges();
             uint32_t divider = std::max(in, out);
             uint32_t noPaths = card.noPaths * next.noPaths / divider;
             card = cardStat{ next.noIn, noPaths, card.noOut };
