@@ -209,8 +209,8 @@ cardStat SimpleEstimator::estimate(RPQTree *query) {
                 next = labelCardStats[parsedQuery[i].first];
             else next = reverse(labelCardStats[parsedQuery[i].first]);
 
-            uint32_t in = card.noIn * next.noPaths / graph->getNoEdges();
-            uint32_t out = next.noOut * card.noPaths / graph->getNoEdges();
+            uint32_t in = card.noIn;// * next.noPaths / graph->getNoEdges();
+            uint32_t out = next.noOut;// * card.noPaths / graph->getNoEdges();
             uint32_t divider = std::max(in, out);
             uint32_t noPaths = card.noPaths * next.noPaths / divider;
             card = cardStat{next.noOut, noPaths, card.noIn};
