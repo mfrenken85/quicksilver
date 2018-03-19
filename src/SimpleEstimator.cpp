@@ -29,11 +29,12 @@ SimpleEstimator::SimpleEstimator(std::shared_ptr<SimpleGraph> &g){
 void SimpleEstimator::prepare() {
 
     // do your prep here
+    /*
     for(int i = 0; i < graph->getNoVertices(); i++) {
         if (!graph->adj[i].empty()){
             for (int j = 0; j < graph->adj[i].size(); j++ ) {
                 uint32_t label = graph->adj[i][j].first;
-                if (setInOutLabels.insert(label).second) {
+                if (setLabels.insert(label).second) {
                     histOut[label]++;
                 }
                 if (histLabels[label]){
@@ -43,18 +44,47 @@ void SimpleEstimator::prepare() {
                 }
                 histLabels[label]++;
             }
-            setInOutLabels.clear();
+            setLabels.clear();
         }
         if (!graph->reverse_adj[i].empty()) {
             for (int j = 0; j < graph->reverse_adj[i].size(); j++) {
                 uint32_t label = graph->reverse_adj[i][j].first;
-                if (setInOutLabels.insert(label).second) {
+                if (setLabels.insert(label).second) {
                     histIn[label]++;
                 }
             }
-            setInOutLabels.clear();
+            setLabels.clear();
         }
     }
+    */
+
+    for(int i = 0; i < graph->getNoVertices(); i++) {
+        if (!graph->adj[i].empty()){
+            for (int j = 0; j < graph->adj[i].size(); j++ ) {
+                uint32_t label = graph->adj[i][j].first;
+                if (setLabels.insert(label).second) {
+                    histOut[label]++;
+                }
+                if (histLabels[label]){
+                    histLabels[label]++;
+                } else {
+                    histLabels[label] = 1;
+                }
+                //histLabels[label]++;
+            }
+            setLabels.clear();
+        }
+        if (!graph->reverse_adj[i].empty()) {
+            for (int j = 0; j < graph->reverse_adj[i].size(); j++) {
+                uint32_t label = graph->reverse_adj[i][j].first;
+                if (setLabels.insert(label).second) {
+                    histIn[label]++;
+                }
+            }
+            setLabels.clear();
+        }
+    }
+
     for (int i = 0; i < histLabels.size(); ++i) {
         labelCardStats.emplace(i , cardStat {histOut[i], histLabels[i], histIn[i]});
     }
