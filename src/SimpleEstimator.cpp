@@ -86,7 +86,6 @@ void  SimpleEstimator::estimator_aux(RPQTree *q) {
             std::cerr << "Label parsing failed!" << std::endl;
         }
         parsedQuery.push_back(std::make_pair(label, inverse));
-        //SimpleEstimator::calculate(label, inverse);
     }
 
     if(q->isConcat()) {
@@ -138,7 +137,7 @@ cardStat SimpleEstimator::estimate(RPQTree *query) {
             uint32_t out = next.noOut; // * card.noPaths / graph->getNoEdges();
             uint32_t divider = std::max(in, out);
             uint32_t noPaths = card.noPaths * next.noPaths / divider;
-            card = cardStat{ next.noIn, noPaths, card.noOut };
+            card = cardStat{ std::min(card.noOut, noPaths), noPaths, std::min(next.noIn, noPaths) };
         }
         parsedQuery.clear();
         return card;
