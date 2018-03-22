@@ -33,7 +33,6 @@ SimpleEstimator::SimpleEstimator(std::shared_ptr<SimpleGraph> &g){
 void SimpleEstimator::prepare() {
 
     // do your prep here
-
     for(int i = 0; i < graph->getNoVertices(); i++) {
         if (!graph->adj[i].empty()){
             for (int j = 0; j < graph->adj[i].size(); j++ ) {
@@ -43,6 +42,13 @@ void SimpleEstimator::prepare() {
                 }
                 if (histLabels[label]){
                     histLabels[label]++;
+                    // test
+                    if (i<graph->adj[i][j].second) {
+                        dist[label] += graph->adj[i][j].second - i;
+                    } else {
+                        dist[label] += i - graph->adj[i][j].second;
+                    }
+                    //test
                 } else {
                     histLabels[label] = 1;
                 }
@@ -59,6 +65,15 @@ void SimpleEstimator::prepare() {
             setLabels.clear();
         }
     }
+
+    // test
+    for (const auto& kv : dist) {
+        av_dist[kv.first] = kv.second/histLabels[kv.first];
+
+        std::cout << kv.first << " has value " << kv.second << std::endl;
+    }
+
+    // test
 
     for (int i = 0; i < histLabels.size(); ++i) {
         labelCardStats.emplace(i , cardStat { histOut[i], histLabels[i], histIn[i]} );
