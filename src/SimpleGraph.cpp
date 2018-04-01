@@ -16,12 +16,6 @@ void SimpleGraph::setNoVertices(uint32_t n) {
     V = n;
     adj.resize(V);
     reverse_adj.resize(V);
-
-    // linked list
-    tableHead = createTableHead();
-    reverse_tableHead = createTableHead();
-    tablePointers[0] = tableHead;
-    reverse_tablePointers[0] = reverse_tableHead;
 }
 
 uint32_t SimpleGraph::getNoEdges() const {
@@ -39,6 +33,7 @@ bool sortPairs(const std::pair<uint32_t,uint32_t> &a, const std::pair<uint32_t,u
 }
 
 uint32_t SimpleGraph::getNoDistinctEdges() const {
+
     uint32_t sum = 0;
 
     for (auto sourceVec : adj) {
@@ -109,207 +104,9 @@ void SimpleGraph::readFromContiguousFile(const std::string &fileName) {
             uint32_t object = (uint32_t) std::stoul(matches[3]);
 
             addEdge(subject, object, predicate);
-            addEdgeToLinkedList(subject, object, predicate, tableHead, false);
-            addEdgeToLinkedList(object, subject, predicate, reverse_tableHead, true);
         }
     }
 
     graphFile.close();
 
 }
-
-// A C Program to demonstrate adjacency list representation of graphs
-
-
-SimpleGraph::AdjTable* SimpleGraph::createTableHead() {
-    AdjTable *table;
-    table = new AdjTable;
-    table->next = 0;
-    table->label = 0;
-    table->V = 0;
-    table->E = 0;
-    table->head = 0;
-    return table;
-}
-/*
- * find table with correct label for Evaluator
- * returns SimpleGraph::AdjTable* OR 0 if not found
- */
-SimpleGraph::AdjTable* SimpleGraph::getTable(uint32_t label, bool reverse) {
-    if (!reverse) {
-        if (tablePointers[label]) {
-            return tablePointers[label];
-        }
-    } else {
-        if (reverse_tablePointers[label]) {
-            return reverse_tablePointers[label];
-        }
-    }
-    return 0;
-}
-
-void SimpleGraph::setTable(uint32_t label, AdjTable* table, bool reverse) {
-    if (!reverse) {
-        tablePointers[label] = table;
-    } else {
-        reverse_tablePointers[label] = table;
-    }
-}
-
-void SimpleGraph::addEdgeToLinkedList(uint32_t from, uint32_t to, uint32_t edgeLabel, AdjTable* table, bool reverse) // add v to linked list
-{
-    AdjTable *conductorTable;  // This will point to each node as it traverses the list
-    AdjList *conductorList;  // This will point to each node as it traverses the list
-    AdjListNode *conductorNode;  // This will point to each node as it traverses the list
-    // previous
-    AdjTable *previousTable;
-    AdjList *previousList;
-    AdjListNode *previousNode;
-
-    //labels//////////////////////////////
-
-    previousTable = table; // The conductor points to the first node
-    conductorTable = table; // The conductor points to the first node
-
-    bool first_itter = true;
-    if ( conductorTable != 0 ) {
-        while ( conductorTable->next != 0 && conductorTable->label != edgeLabel && conductorTable->label < edgeLabel) {
-            conductorTable = conductorTable->next;
-            if (!first_itter) {  //dont increase previousTable on the first itter of the while loop
-                previousTable = previousTable->next;
-            }
-            first_itter = false; // first itteration done
-        }
-    }
-    if (conductorTable->label < edgeLabel) {    // Label not found, create new label
-        conductorTable->next = new AdjTable; // Creates a node at the end of the list
-        conductorTable = conductorTable->next;    // Points to that node
-        conductorTable->next = 0;            // Prevents it from going any further
-        conductorTable->label = edgeLabel;
-        conductorTable->head = 0;
-        conductorTable->V = 0;
-        conductorTable->E = 0;
-    }
-
-    if (conductorTable->label > edgeLabel) {    // Label not found, create new label
-        previousTable->next = new AdjTable; // Creates a node at the end of the list
-        previousTable = previousTable->next;    // Points to that node
-        previousTable->next = conductorTable;            // glues the linked list back together
-        previousTable->label = edgeLabel;
-        previousTable->head = 0;
-        previousTable->V = 0;
-        previousTable->E = 0;
-        conductorTable = previousTable;
-    }
-    if (!reverse) {
-        tablePointers[conductorTable->label] = conductorTable;
-    } else {
-        reverse_tablePointers[conductorTable->label] = conductorTable;
-    }
-
-    // from /////////////////////////////////////////////
-
-    if (conductorTable->head == 0) { //head empty, create new AdjList
-        conductorTable->head = new AdjList;
-        conductorList = conductorTable->head;
-        conductorList->from = from;
-        conductorList->next = 0;
-        conductorList->head = 0;
-        conductorTable->V++;
-    } else { // not empty
-        first_itter = true;
-        conductorList = conductorTable->head;
-        previousList = conductorTable->head;
-        if ( conductorList != 0 ) {
-            while ( conductorList->next != 0 && conductorList->from < from) {
-                conductorList = conductorList->next;
-                if (!first_itter) {  //dont increase previousTable on the first itter of the while loop
-                    previousList = previousList->next;
-                } else {
-                    first_itter = false; // first itteration done
-                }
-
-            }
-        }
-        if (conductorList->from < from) {    // Label not found, create new label
-            conductorList->next = new AdjList; // Creates a node at the end of the list
-            conductorList = conductorList->next;    // Points to that node
-            conductorList->next = 0;            // Prevents it from going any further
-            conductorList->from = from;
-            conductorList->head = 0;
-            conductorTable->V++;
-        }
-
-        if (conductorList->from > from) {    // Label not found, create new label
-            if (previousList != conductorList) {
-                previousList->next = new AdjList; //
-                previousList = previousList->next;
-            } else {
-                conductorTable->head = new AdjList; //
-                previousList = conductorTable->head;
-            }
-            previousList->next = conductorList;            // glues the linked list back together
-            previousList->from = from;
-            previousList->head = 0;
-            conductorList = previousList;
-            conductorTable->V++;
-        }
-    }
-
-    // to /////////////////////////////////////////////
-
-    if (conductorList->head == 0) { //head empty, create new AdjList
-        conductorList->head = new AdjListNode;
-        conductorNode = conductorList->head;
-        conductorNode->to = to;
-        conductorNode->next = 0;
-        conductorTable->E++;
-    } else { // not empty
-        first_itter = true;
-        conductorNode = conductorList->head;
-        previousNode = conductorList->head;
-        if ( conductorNode != 0 ) {
-            while ( conductorNode->next != 0 && conductorNode->to != to) {
-                conductorNode = conductorNode->next;
-                if (!first_itter) {  //dont increase previousTable on the first itter of the while loop
-                    previousNode = previousNode->next;
-                } else {
-                    first_itter = false; // first itteration done
-                }
-            }
-        }
-        if (conductorNode->to < to) {    // Label not found, create new label
-            conductorNode->next = new AdjListNode; // Creates a node at the end of the list
-            conductorNode = conductorNode->next;    // Points to that node
-            conductorNode->next = 0;            // Prevents it from going any further
-            conductorNode->to = to;
-            conductorTable->E++;
-        }
-
-        if (conductorNode->to > to) {    // Label not found, create new label
-            if (previousNode != conductorNode) {
-                previousNode->next = new AdjListNode; //
-                previousNode = previousNode->next;
-            } else {
-                conductorList->head = new AdjListNode; //
-                previousNode = conductorList->head;
-            }
-            previousNode->next = conductorNode;            // glues the linked list back together
-            previousNode->to = to;
-            conductorTable->E++;
-        }
-    }
-
-
-
-    /*
-     * for k2 tree, use std::vector<bool> for storing the bools, or std::bitset if N is constant
-     *
-     * https://github.com/nilehmann/libk2tree/tree/master/src/libk2tree
-     */
-
-}
-
-
-
-// Driver program to test above functions
