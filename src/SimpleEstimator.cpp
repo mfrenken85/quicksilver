@@ -31,7 +31,38 @@ SimpleEstimator::SimpleEstimator(std::shared_ptr<SimpleGraph> &g){
 }
 
 void SimpleEstimator::prepare() {
+    //prepare_default();
+    prepare_linkedlist();
+}
 
+void SimpleEstimator::prepare_linkedlist() {
+    // calc for linked list
+
+    SimpleGraph::AdjTable *conductorTable;
+    conductorTable = graph->tableHead;
+
+    if ( conductorTable != 0 ) {
+        histLabels[conductorTable->label] = conductorTable->E;
+        histOut[conductorTable->label] = conductorTable->V;
+        while ( conductorTable->next != 0) {
+            conductorTable = conductorTable->next;
+            histLabels[conductorTable->label] = conductorTable->E;
+            histOut[conductorTable->label] = conductorTable->V;
+        }
+    }
+
+    conductorTable = graph->reverse_tableHead;
+
+    if ( conductorTable != 0 ) {
+        histIn[conductorTable->label] = conductorTable->V;
+        while ( conductorTable->next != 0) {
+            conductorTable = conductorTable->next;
+            histIn[conductorTable->label] = conductorTable->V;
+        }
+    }
+}
+
+void SimpleEstimator::prepare_default() {
     // do your prep here
     for(int i = 0; i < graph->getNoVertices(); i++) {
         if (!graph->adj[i].empty()){
@@ -42,13 +73,6 @@ void SimpleEstimator::prepare() {
                 }
                 if (histLabels[label]){
                     histLabels[label]++;
-                    // test
-                    if (i<graph->adj[i][j].second) {
-                        dist[label] += graph->adj[i][j].second - i;
-                    } else {
-                        dist[label] += i - graph->adj[i][j].second;
-                    }
-                    //test
                 } else {
                     histLabels[label] = 1;
                 }
@@ -65,16 +89,6 @@ void SimpleEstimator::prepare() {
             setLabels.clear();
         }
     }
-
-    // test
-    for (const auto& kv : dist) {
-        av_dist[kv.first] = kv.second/histLabels[kv.first];
-
-        std::cout << kv.first << " has value " << kv.second << std::endl;
-    }
-
-    // test
-
     for (int i = 0; i < histLabels.size(); ++i) {
         labelCardStats.emplace(i , cardStat { histOut[i], histLabels[i], histIn[i]} );
     }

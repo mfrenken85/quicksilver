@@ -26,11 +26,6 @@ class SimpleEstimator : public Estimator {
     std::map<uint32_t,cardStat> labelCardStats;
     std::vector<std::pair<uint32_t, char>> parsedQuery;
 
-    //test
-    std::map<uint32_t,uint32_t> dist;
-    std::map<uint32_t,uint32_t> av_dist;
-    //test
-
 public:
     explicit SimpleEstimator(std::shared_ptr<SimpleGraph> &g);
     ~SimpleEstimator() = default;
@@ -38,8 +33,11 @@ public:
     void prepare() override ;
     cardStat estimate(RPQTree *q) override ;
 
-    void estimator_aux(RPQTree *q);;
+    void estimator_aux(RPQTree *q);
     cardStat reverse(cardStat card);
+
+    void prepare_default();
+    void prepare_linkedlist();
 };
 
 
