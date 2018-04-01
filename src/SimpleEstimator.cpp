@@ -31,9 +31,39 @@ SimpleEstimator::SimpleEstimator(std::shared_ptr<SimpleGraph> &g){
 }
 
 void SimpleEstimator::prepare() {
+    //prepare_default();
+    prepare_linkedlist();
+}
 
+void SimpleEstimator::prepare_linkedlist() {
+    // calc for linked list
+
+    SimpleGraph::AdjTable *conductorTable;
+    conductorTable = graph->tableHead;
+
+    if ( conductorTable != 0 ) {
+        histLabels[conductorTable->label] = conductorTable->E;
+        histOut[conductorTable->label] = conductorTable->V;
+        while ( conductorTable->next != 0) {
+            conductorTable = conductorTable->next;
+            histLabels[conductorTable->label] = conductorTable->E;
+            histOut[conductorTable->label] = conductorTable->V;
+        }
+    }
+
+    conductorTable = graph->reverse_tableHead;
+
+    if ( conductorTable != 0 ) {
+        histIn[conductorTable->label] = conductorTable->V;
+        while ( conductorTable->next != 0) {
+            conductorTable = conductorTable->next;
+            histIn[conductorTable->label] = conductorTable->V;
+        }
+    }
+}
+
+void SimpleEstimator::prepare_default() {
     // do your prep here
-
     for(int i = 0; i < graph->getNoVertices(); i++) {
         if (!graph->adj[i].empty()){
             for (int j = 0; j < graph->adj[i].size(); j++ ) {
@@ -59,7 +89,6 @@ void SimpleEstimator::prepare() {
             setLabels.clear();
         }
     }
-
     for (int i = 0; i < histLabels.size(); ++i) {
         labelCardStats.emplace(i , cardStat { histOut[i], histLabels[i], histIn[i]} );
     }

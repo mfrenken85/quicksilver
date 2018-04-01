@@ -33,8 +33,11 @@ public:
     void prepare() override ;
     cardStat estimate(RPQTree *q) override ;
 
-    void estimator_aux(RPQTree *q);;
+    void estimator_aux(RPQTree *q);
     cardStat reverse(cardStat card);
+
+    void prepare_default();
+    void prepare_linkedlist();
 };
 
 
