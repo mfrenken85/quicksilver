@@ -108,7 +108,7 @@ void SimpleGraph::readFromContiguousFile(const std::string &fileName) {
             uint32_t predicate = (uint32_t) std::stoul(matches[2]);
             uint32_t object = (uint32_t) std::stoul(matches[3]);
 
-            addEdge(subject, object, predicate);
+            //addEdge(subject, object, predicate);
             addEdgeToLinkedList(subject, object, predicate, tableHead, false);
             addEdgeToLinkedList(object, subject, predicate, reverse_tableHead, true);
         }
