@@ -12,6 +12,9 @@ RPQTree::~RPQTree() {
 
 RPQTree* RPQTree::strToTree(std::string &str) {
 
+    //在这里像个办法，把那个input string 的顺序调换一下。
+    //也就是说，把所有括号都去掉，并且之后，
+    //执行动态规划，选择最好的一个plan。
     str.erase(std::remove_if(str.begin(), str.end(), ::isspace), str.end()); // remove spaces
 
     int level = 0; // inside parentheses check
