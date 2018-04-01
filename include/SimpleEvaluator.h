@@ -32,7 +32,14 @@ public:
     static std::shared_ptr<SimpleGraph> project(uint32_t label, bool inverse, std::shared_ptr<SimpleGraph> &g);
     static std::shared_ptr<SimpleGraph> join(std::shared_ptr<SimpleGraph> &left, std::shared_ptr<SimpleGraph> &right);
 
+
+    std::shared_ptr<SimpleGraph> ll_evaluate_aux(RPQTree *q);
+    static std::shared_ptr<SimpleGraph> ll_project(uint32_t label, bool inverse, std::shared_ptr<SimpleGraph> &g);
+    static std::shared_ptr<SimpleGraph> ll_join(std::shared_ptr<SimpleGraph> &left, std::shared_ptr<SimpleGraph> &right);
+
     static cardStat computeStats(std::shared_ptr<SimpleGraph> &g);
+
+    static cardStat ll_computeStats(std::shared_ptr<SimpleGraph> &g);
 
 };
 
