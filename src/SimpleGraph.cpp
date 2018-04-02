@@ -300,14 +300,6 @@ void SimpleGraph::addEdgeToLinkedList(uint32_t from, uint32_t to, uint32_t edgeL
         }
     }
 
-
-
-    /*
-     * for k2 tree, use std::vector<bool> for storing the bools, or std::bitset if N is constant
-     *
-     * https://github.com/nilehmann/libk2tree/tree/master/src/libk2tree
-     */
-
 }
 
 
