@@ -34,6 +34,12 @@ public:
 
     static cardStat computeStats(std::shared_ptr<SimpleGraph> &g);
 
+
+    // k2 stuff
+    std::shared_ptr<SimpleGraph> k2_evaluate_aux(RPQTree *q);
+    static std::shared_ptr<SimpleGraph> k2_project(uint32_t label, bool inverse, std::shared_ptr<SimpleGraph> &g);
+    static std::shared_ptr<SimpleGraph> k2_join(std::shared_ptr<SimpleGraph> &left, std::shared_ptr<SimpleGraph> &right);
+
 };
 
 

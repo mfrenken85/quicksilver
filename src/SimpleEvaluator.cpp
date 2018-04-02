@@ -55,7 +55,8 @@ std::shared_ptr<SimpleGraph> SimpleEvaluator::project(uint32_t projectLabel, boo
                 auto label = labelTarget.first;
                 auto target = labelTarget.second;
 
-                if (label == projectLabel)
+                bool test = (label == projectLabel);
+                if (in->findEdgeToK2Tree(source,target,projectLabel, test)) //
                     out->addEdge(source, target, label);
             }
         }
@@ -67,12 +68,31 @@ std::shared_ptr<SimpleGraph> SimpleEvaluator::project(uint32_t projectLabel, boo
                 auto label = labelTarget.first;
                 auto target = labelTarget.second;
 
-                if (label == projectLabel)
+                bool test = (label == projectLabel);
+                if (in->findEdgeToK2Tree(target,source,projectLabel,test)) //
                     out->addEdge(source, target, label);
             }
         }
     }
+    return out;
+}
 
+std::shared_ptr<SimpleGraph> SimpleEvaluator::k2_project(uint32_t projectLabel, bool inverse, std::shared_ptr<SimpleGraph> &in) {
+
+    auto out = std::make_shared<SimpleGraph>(in->getNoVertices());
+    out->setNoLabels(in->getNoLabels());
+    for(uint32_t source = 0; source < in->getNoVertices(); source++) {
+        for (uint32_t target = 0; target < in->getNoVertices(); target++) {
+            if (!inverse) {
+                if (in->findEdgeToK2Tree(source,target,projectLabel,true)) //label == projectLabel
+                    out->addEdge(source, target, projectLabel);
+            } else {
+                if (in->findEdgeToK2Tree(target,source,projectLabel,true)) //label == projectLabel
+                    out->addEdge(source, target, projectLabel);
+            }
+
+        }
+    }
     return out;
 }
 

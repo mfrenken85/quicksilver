@@ -63,6 +63,9 @@ uint32_t SimpleGraph::getNoLabels() const {
 
 void SimpleGraph::setNoLabels(uint32_t noLabels) {
     L = noLabels;
+
+    // create k2 bitmap
+    createToK2TreeMaps(L,V);
 }
 
 void SimpleGraph::addEdge(uint32_t from, uint32_t to, uint32_t edgeLabel) {
@@ -72,6 +75,8 @@ void SimpleGraph::addEdge(uint32_t from, uint32_t to, uint32_t edgeLabel) {
                                  std::to_string(edgeLabel) + ")");
     adj[from].emplace_back(std::make_pair(edgeLabel, to));
     reverse_adj[to].emplace_back(std::make_pair(edgeLabel, from));
+    // add edge
+    addEdgeToK2Tree(from,to,edgeLabel);
 }
 
 void SimpleGraph::readFromContiguousFile(const std::string &fileName) {
@@ -107,6 +112,34 @@ void SimpleGraph::readFromContiguousFile(const std::string &fileName) {
         }
     }
 
-    graphFile.close();
 
+    graphFile.close();
+}
+
+/*
+ * k2 tree methods for memory test
+ * creating of binary adj tables to see what their size will be.
+ */
+
+// k2tree methods (just for memory test)
+// create all the maps needed to store all data per label
+void SimpleGraph::createToK2TreeMaps(uint32_t count_labels, uint32_t count_V) {
+    for(int i = 0; i <= count_labels; i++) {
+        //adj_k2table_vector[i].assign(count_V*count_V, false);
+        //adj_k2table_bitset[i].set();   // SEVERELY SLOWS THE PROCESS
+    }
+
+}
+// add label to k2 table
+void SimpleGraph::addEdgeToK2Tree(uint32_t from, uint32_t to, uint32_t edgeLabel) {
+    //adj_k2table_vector[edgeLabel].at(from*(V-1) + to) = true;
+    adj_k2table_bitset[edgeLabel][from*(V-1) + to] = true;
+}
+
+bool SimpleGraph::findEdgeToK2Tree(uint32_t from, uint32_t to, uint32_t edgeLabel, bool should) {
+    bool r = adj_k2table_bitset[edgeLabel][(from)*(V-1) + (to)];
+    if (should != r) {
+        //return r;
+    }
+    return r;
 }
