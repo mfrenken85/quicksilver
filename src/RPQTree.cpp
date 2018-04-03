@@ -3,6 +3,7 @@
 //
 
 #include <iostream>
+#include "SimpleGraph.h"
 #include "RPQTree.h"
 
 RPQTree::~RPQTree() {

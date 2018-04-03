@@ -7,6 +7,7 @@
 
 #include <string>
 #include <algorithm>
+#include "SimpleGraph.h"
 
 class RPQTree {
 
@@ -22,7 +23,6 @@ public:
     void print();
 
     bool isConcat();
-
     bool isLeaf();
     bool isUnary();
     bool isBinary();

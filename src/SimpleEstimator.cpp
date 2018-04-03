@@ -101,37 +101,38 @@ cardStat SimpleEstimator::reverse(cardStat card) {
 cardStat SimpleEstimator::estimate(RPQTree *query) {
 
     estimator_aux(query);
+    cardStat card = estimateQuery(parsedQuery);
+    parsedQuery.clear();
+    return  card;
+}
 
-    if(parsedQuery.size()==0)
+cardStat SimpleEstimator::estimateQuery(std::vector<std::pair<uint32_t, char>> pq){
+    cardStat card{0,0,0};
+    if(pq.size()==0)
     {
-        parsedQuery.clear();
         return cardStat{0,0,0};
     }
-    else if(parsedQuery.size()==1)
+    else if(pq.size()==1)
     {
-        cardStat card;
-        if(parsedQuery[0].second == '+'){
-            card = labelCardStats[parsedQuery[0].first];
+        if(pq[0].second == '+'){
+            card = labelCardStats[pq[0].first];
         }
         else{
-            card = reverse(labelCardStats[parsedQuery[0].first]);
+            card = reverse(labelCardStats[pq[0].first]);
         }
-        parsedQuery.clear();
-        return  card;
     }
     else
     {
-        cardStat card;
-        if(parsedQuery[0].second == '+')
-            card = labelCardStats[parsedQuery[0].first];
-        else card = reverse(labelCardStats[parsedQuery[0].first]);
+        if(pq[0].second == '+')
+            card = labelCardStats[pq[0].first];
+        else card = reverse(labelCardStats[pq[0].first]);
 
-        for(int i = 1; i<parsedQuery.size();i++)
+        for(int i = 1; i<pq.size();i++)
         {
             cardStat next;
-            if(parsedQuery[i].second == '+')
-                next = labelCardStats[parsedQuery[i].first];
-            else next = reverse(labelCardStats[parsedQuery[i].first]);
+            if(pq[i].second == '+')
+                next = labelCardStats[pq[i].first];
+            else next = reverse(labelCardStats[pq[i].first]);
 
             uint32_t in = card.noIn; // * next.noPaths / graph->getNoEdges();
             uint32_t out = next.noOut; // * card.noPaths / graph->getNoEdges();
@@ -139,7 +140,8 @@ cardStat SimpleEstimator::estimate(RPQTree *query) {
             uint32_t noPaths = card.noPaths * next.noPaths / divider;
             card = cardStat{ std::min(card.noOut, noPaths), noPaths, std::min(next.noIn, noPaths) };
         }
-        parsedQuery.clear();
-        return card;
     }
+    pq.clear();
+    return card;
 }
+

@@ -31,9 +31,10 @@ public:
     ~SimpleEstimator() = default;
 
     void prepare() override ;
-    cardStat estimate(RPQTree *q) override ;
+    cardStat estimate(RPQTree *q);
+    cardStat estimateQuery(std::vector<std::pair<uint32_t, char>> pq);
 
-    void estimator_aux(RPQTree *q);;
+    void estimator_aux(RPQTree *q);
     cardStat reverse(cardStat card);
 };
 
