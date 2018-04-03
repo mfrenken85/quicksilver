@@ -14,8 +14,8 @@ uint32_t SimpleGraph::getNoVertices() const {
 
 void SimpleGraph::setNoVertices(uint32_t n) {
     V = n;
-    adj.resize(V);
-    reverse_adj.resize(V);
+    //adj.resize(V);
+    //reverse_adj.resize(V);
 
     // linked list
     tableHead = createTableHead();
