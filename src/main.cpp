@@ -61,12 +61,10 @@ bestPlan findBestPlan(std::string query, std::shared_ptr<SimpleGraph> &graph, st
         plan.cost = estimateCostOfJoin(leftLabel,rightLabel,est);
     }
     else{
-        for (int i = 2; i < query.size()-1; ++i) {
-            if( i%2 != 0 ) continue;
-
+        for (int i = 1; i < query.size()-1; ++i) {
             // TODO, change the estimator, such taht it accept cardStatus input.
             std::string left = split(query,'/')[0];
-            std::string right = split(query,'/')[split(query,'/').size()-1];
+            std::string right = query.substr(left.size(),query.size() - left.size());
 
             bestPlan p1 = findBestPlan(left,graph,est);
             bestPlan p2 = findBestPlan(right,graph,est);
