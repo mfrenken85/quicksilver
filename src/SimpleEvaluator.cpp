@@ -152,6 +152,7 @@ void SimpleEvaluator::printPlans(RPQTree *q) {
     stats = est->estimate(q);
     std::cout << "\nSub plan: ";
     q->print();
+    std::cout << "\nto string: " << q->toString();
     std::cout << "\nSub est: ";
     stats.print();
     if (q->isConcat()) {

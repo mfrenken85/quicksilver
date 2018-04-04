@@ -20,6 +20,7 @@ public:
 
     static RPQTree* strToTree(std::string &str);
     void print();
+    std::string toString();
 
     bool isConcat();
 
