@@ -16,11 +16,7 @@ struct query {
     }
 };
 
-struct bestPlan {
-    std::string executedQuery;
-    uint32_t cost;
-};
-
+/*
 std::vector<std::string> split(const std::string &s, char delim) {
     std::stringstream ss(s);
     std::string item;
@@ -31,66 +27,95 @@ std::vector<std::string> split(const std::string &s, char delim) {
     return tokens;
 }
 
-// this part will be changed later.
 uint32_t estimateCostOfJoin(std::string left, std::string right, std::shared_ptr<SimpleEstimator> est){
-    std::vector<std::pair<uint32_t, char>> parsedQuery;
-    parsedQuery.emplace_back(std::stoi(left.substr(0,left.size()-1)),left.at(1));
-    parsedQuery.emplace_back(std::stoi(left.substr(0,left.size()-1)),right.at(1));
-    cardStat card = est->estimateQuery(parsedQuery);
+    std::string queryPath = "";
+    if(right!="") {
+        queryPath = "(" + left + ')' + '(' + right + ")";
+    }
+    else{
+        queryPath = left;
+    }
+    RPQTree *queryTree = RPQTree::strToTree(queryPath);
+    //queryTree->print();
+    cardStat card = est->estimate(queryTree);
     return card.noPaths;
 }
 
-bestPlan plan;
-// use dynamic programming to find the best plan.
-bestPlan findBestPlan(std::string query, std::shared_ptr<SimpleGraph> &graph, std::shared_ptr<SimpleEstimator> est){
+std::map<std::string,bestPlan> plans;
+// Dynamic programming to find the best plan.
+bestPlan findBestPlan(std::string originalQuery, std::string query, std::shared_ptr<SimpleGraph> &graph, std::shared_ptr<SimpleEstimator> est){
 
-    std::string temp = "";
-    for (int j = 0; j < plan.executedQuery.size(); ++j) {
-        if( plan.executedQuery[j] != '(' && plan.executedQuery[j] != ')' && plan.executedQuery[j]!= '/') temp += plan.executedQuery[j];
-    }
-    if( temp==query ) return plan; // best plan already calculated.
+    if( plans.count(originalQuery) !=0 )
+        return plans[originalQuery]; // best plan already calculated.
 
-    uint32_t relationCounter =0;
-    for (int k = 0; k < query.size(); ++k) {
-        if( query[k] == '/') relationCounter++;
-    }
-    if(relationCounter == 1){
-        plan.executedQuery = "(" + query + ")";
+    auto splits = split(query,'/');
+    uint32_t splitsSize = splits.size();
+    if ( splitsSize==1 ){
+        if(plans.count(query)==0) {
+            bestPlan p;
+            p.executedQuery = "";
+            p.cost = std::numeric_limits<int>::max();
+            plans[query] = p;
+        }
+        plans[query].executedQuery = query;
+        plans[query].cost = estimateCostOfJoin(query,"",est);
+    } else if( splitsSize == 2){
+        if(plans.count(query)==0) {
+            bestPlan p;
+            p.executedQuery = "";
+            p.cost = std::numeric_limits<int>::max();
+            plans[query] = p;
+        }
+        plans[query].executedQuery = "(" + query + ")";
         std::string leftLabel = split(query,'/')[0];
         std::string rightLabel = split(query,'/')[1];
-        plan.cost = estimateCostOfJoin(leftLabel,rightLabel,est);
+        plans[query].cost = estimateCostOfJoin(leftLabel,rightLabel,est);
     }
     else{
-        for (int i = 1; i < query.size()-1; ++i) {
-            // TODO, change the estimator, such taht it accept cardStatus input.
-            std::string left = split(query,'/')[0];
-            std::string right = query.substr(left.size(),query.size() - left.size());
-
-            bestPlan p1 = findBestPlan(left,graph,est);
-            bestPlan p2 = findBestPlan(right,graph,est);
-            // cost of joining p1 and p2.
-            std::string leftLabel = p1.executedQuery.substr(p1.executedQuery.size()-3,2);
-            std::string rightLabel = p2.executedQuery.substr(1,2);
-            uint32_t costOfJoin = estimateCostOfJoin(leftLabel,rightLabel,est);
-            uint32_t totalCost = costOfJoin + p1.cost + p2.cost;
-            if(totalCost < plan.cost) {
-                plan.cost = totalCost;
-                plan.executedQuery = "(" + p1.executedQuery + p2.executedQuery +")";
+        for (int i = 0; i < splits.size()-1; ++i) {
+            std::string left = "";
+            std::string right = "";
+            for (int j = 0; j < splits.size(); ++j) {
+                if(j<=i) left+=splits[j];
+                else right+=splits[j];
+            }
+            bestPlan p1 = findBestPlan(originalQuery,left,graph,est);
+            bestPlan p2 = findBestPlan(originalQuery,right,graph,est);
+            // cost of joining
+            std::string leftLabel = p1.executedQuery;
+            std::string rightLabel = p2.executedQuery;
+            uint32_t totalCost = estimateCostOfJoin(leftLabel,rightLabel,est);
+            if(plans.count(query)==0) {
+                bestPlan p;
+                p.executedQuery = "";
+                p.cost = std::numeric_limits<int>::max();
+                plans[query] = p;
+            }
+            if(totalCost < plans[query].cost) {
+                plans[query].cost = totalCost;
+                std::string left = p1.executedQuery;
+                uint32_t leftpmCounter = 0;
+                uint32_t rightpmCounter = 0;
+                std::string right = p2.executedQuery;
+                for (int j = 0; j < left.size(); ++j) {
+                    if(left[j]=='+'||left[j]=='-') leftpmCounter ++;
+                }
+                for (int j = 0; j < right.size(); ++j) {
+                    if(right[j]=='+'||right[j]=='-') rightpmCounter ++;
+                }
+                if(leftpmCounter !=1) left =  '(' + left + ')';
+                if(rightpmCounter!=1) right =  '(' + right + ')';
+                plans[query].executedQuery = left + right;
             }
         }
     }
-    return plan;
+    return plans[query];
 }
 
 // remove the brackets of the input.
 std::string preParse(std::string str,std::shared_ptr<SimpleGraph> &graph, std::shared_ptr<SimpleEstimator> est){
-
     // if this query only contains 1 or 2 relation, no need to find a good plan, since this is only 1 plan possible..
-    uint32_t relationCounter =0;
-    for (int k = 0; k < str.size(); ++k) {
-        if( str[k] == '/') relationCounter++;
-    }
-    if(relationCounter <= 2)
+    if(split(str,'/').size() <= 2)
         return  str;
 
     std::string parsed = "";
@@ -98,8 +123,26 @@ std::string preParse(std::string str,std::shared_ptr<SimpleGraph> &graph, std::s
         if(str[i]=='('||str[i]==')') continue;
         else parsed+=str[i];
     }
-    return  findBestPlan(parsed,graph,est).executedQuery;
+
+    std::string temp = findBestPlan(parsed,parsed,graph,est).executedQuery;
+    std::string queryPath = "";
+    uint32_t pmCounter = 0;
+    for (int j = 0; j < temp.length(); ++j) {
+        if(temp[j]=='+' || temp[j]=='-'){
+            pmCounter++;
+        }
+    }
+    uint32_t counter = 0;
+    for (int j = 0; j < temp.length(); ++j) {
+        queryPath += temp[j];
+        if(temp[j]=='+' || temp[j]=='-'){
+            counter++;
+            if(counter!=pmCounter)queryPath += '/';
+        }
+    }
+    return  queryPath;
 }
+*/
 
 std::vector<query> parseQueries(std::string &fileName) {
 
@@ -230,8 +273,9 @@ int evaluatorBench(std::string &graphFile, std::string &queriesFile) {
         // choose the best plan.
         std::string queryPath = query.path;
 
-        std::string preParsedQuery = preParse(queryPath,g,est);
-        std::cout << "preparsed plan is:: " <<preParsedQuery;
+        // TODO: Move the preparser to evaluator.cpp.
+        //std::string preParsedQuery = preParse(queryPath,g,est);
+        //std::cout << "preparsed plan is:: " <<preParsedQuery;
 
         // parse the query into an AST
         std::cout << "\nProcessing query: ";
@@ -247,7 +291,7 @@ int evaluatorBench(std::string &graphFile, std::string &queriesFile) {
 
         std::cout << "\nActual (noOut, noPaths, noIn) : ";
         actual.print();
-        std::cout << "Time to evaluate: " << std::chrono::duration<double, std::milli>(end - start).count() << " ms" << std::endl;
+        std::cout << "Time to evaluate: " << std::chrono::duration<double, std::milli>(end - start).count() << " ms\n" << std::endl;
 
         // clean-up
         delete(queryTree);
@@ -268,7 +312,7 @@ int main(int argc, char *argv[]) {
     std::string graphFile {argv[1]};
     std::string queriesFile {argv[2]};
 
-    estimatorBench(graphFile, queriesFile);
+    //estimatorBench(graphFile, queriesFile);
     evaluatorBench(graphFile, queriesFile);
 
     return 0;
