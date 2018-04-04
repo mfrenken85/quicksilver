@@ -141,6 +141,21 @@ std::shared_ptr<SimpleGraph> SimpleEvaluator::evaluate_aux(RPQTree *q) {
 }
 
 cardStat SimpleEvaluator::evaluate(RPQTree *query) {
+
+    printPlans(query);
     auto res = evaluate_aux(query);
     return SimpleEvaluator::computeStats(res);
+}
+
+void SimpleEvaluator::printPlans(RPQTree *q) {
+    cardStat stats;
+    stats = est->estimate(q);
+    std::cout << "\nSub plan: ";
+    q->print();
+    std::cout << "\nSub est: ";
+    stats.print();
+    if (q->isConcat()) {
+        printPlans(q->left);
+        printPlans(q->right);
+    }
 }
