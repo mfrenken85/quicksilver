@@ -151,6 +151,7 @@ cardStat SimpleEvaluator::evaluate(RPQTree *query) {
     // Hence, we implemented it in this way.
     auto querypath = query->toString();
     querypath = preParse(querypath,graph,est);
+    std::cout << "Query after best plan selection: " + querypath;
     auto newQuery = RPQTree::strToTree(querypath);
 
     auto res = evaluate_aux(newQuery);
