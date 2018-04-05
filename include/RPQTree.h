@@ -28,7 +28,6 @@ public:
     bool isLeaf();
     bool isUnary();
     bool isBinary();
-
 };
 
 

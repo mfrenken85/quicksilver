@@ -62,6 +62,7 @@ RPQTree* RPQTree::strToTree(std::string &str) {
     std::cerr << "Error: parsing RPQ failed." << std::endl;
     return nullptr;
 }
+
 std::string RPQTree::toString() {
     std::string r = "";
     std::string p = "";
