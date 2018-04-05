@@ -151,16 +151,18 @@ cardStat SimpleEvaluator::evaluate(RPQTree *query) {
     // Hence, we implemented it in this way.
     auto start = std::chrono::steady_clock::now();
     auto querypath = query->toString();
-    querypath = preParse(querypath,graph,est);
+    querypath = preParse(querypath, graph, est);
     RPQTree *newQuery = RPQTree::strToTree(querypath);
     auto end = std::chrono::steady_clock::now();
-    std::cout << "\nTime to select the best execution plan is: " << std::chrono::duration<double, std::milli>(end - start).count() << " ms" << std::endl;
+    std::cout << "\nTime to select the best execution plan is: "
+              << std::chrono::duration<double, std::milli>(end - start).count() << " ms" << std::endl;
     std::cout << "The best execution plan is: " + querypath << std::endl;
 
     start = std::chrono::steady_clock::now();
     auto res = evaluate_aux(newQuery);
     end = std::chrono::steady_clock::now();
-    std::cout << "Time to execute the best execution plan is: " << std::chrono::duration<double, std::milli>(end - start).count() << " ms" << std::endl;
+    std::cout << "Time to execute the best execution plan is: "
+              << std::chrono::duration<double, std::milli>(end - start).count() << " ms" << std::endl;
 
     //start = std::chrono::steady_clock::now();
     //evaluate_aux(query);
