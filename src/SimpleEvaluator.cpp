@@ -5,6 +5,7 @@
 #include "SimpleEstimator.h"
 #include "SimpleEvaluator.h"
 #include "RPQTree.h"
+#include <chrono>
 
 SimpleEvaluator::SimpleEvaluator(std::shared_ptr<SimpleGraph> &g) {
 
@@ -23,7 +24,6 @@ void SimpleEvaluator::prepare() {
     if(est != nullptr) est->prepare();
 
     // prepare other things here.., if necessary
-
 }
 
 cardStat SimpleEvaluator::computeStats(std::shared_ptr<SimpleGraph> &g) {
@@ -149,12 +149,24 @@ cardStat SimpleEvaluator::evaluate(RPQTree *query) {
     // In this case, indeed there will be one time useless query to string and string to query transformation.
     // But since this is pretty cheap, and this save much time of programming since this does not change the program's structure.
     // Hence, we implemented it in this way.
+    auto start = std::chrono::steady_clock::now();
     auto querypath = query->toString();
     querypath = preParse(querypath,graph,est);
-    std::cout << "Query after best plan selection: " + querypath;
-    auto newQuery = RPQTree::strToTree(querypath);
+    RPQTree *newQuery = RPQTree::strToTree(querypath);
+    auto end = std::chrono::steady_clock::now();
+    std::cout << "\nTime to select the best execution plan is: " << std::chrono::duration<double, std::milli>(end - start).count() << " ms" << std::endl;
+    std::cout << "The best execution plan is: " + querypath << std::endl;
 
+    start = std::chrono::steady_clock::now();
     auto res = evaluate_aux(newQuery);
+    end = std::chrono::steady_clock::now();
+    std::cout << "Time to execute the best execution plan is: " << std::chrono::duration<double, std::milli>(end - start).count() << " ms" << std::endl;
+
+    start = std::chrono::steady_clock::now();
+    evaluate_aux(query);
+    end = std::chrono::steady_clock::now();
+    std::cout << "Time to execute the original execution plan (without plan selecton) is: " << std::chrono::duration<double, std::milli>(end - start).count() << " ms" << std::endl;
+
     return SimpleEvaluator::computeStats(res);
 }
 
@@ -168,6 +180,11 @@ std::vector<std::string> split(const std::string &s, char delim) {
     return tokens;
 }
 
+// We simply do the estimation on the entire 2 subtrees.
+// The ideal case would be that, the estimator will only estimate the join cost of two subtrees.
+// i.e, oin the right most element of the left subtree with the left most element of the right subtree.
+// Instead of estimating the entire 2 subtrees.
+// But since estimation is pretty cheap, and this is easier to implement, it is implemented in this way.
 uint32_t estimateCostOfJoin(std::string left, std::string right, std::shared_ptr<SimpleEstimator> est){
     std::string queryPath = "";
     if(right!="") {
@@ -182,7 +199,7 @@ uint32_t estimateCostOfJoin(std::string left, std::string right, std::shared_ptr
     return card.noPaths;
 }
 
-// Dynamic programming to find the best plan.
+// We use dynamic programming to find the best query execution plan.
 bestPlan SimpleEvaluator::findBestPlan(std::string originalQuery, std::string query, std::shared_ptr<SimpleGraph> &graph, std::shared_ptr<SimpleEstimator> est){
 
     if( plans.count(originalQuery) !=0 )
@@ -206,21 +223,24 @@ bestPlan SimpleEvaluator::findBestPlan(std::string originalQuery, std::string qu
             p.cost = std::numeric_limits<int>::max();
             plans[query] = p;
         }
-        plans[query].executedQuery = "(" + query + ")";
-        std::string leftLabel = split(query,'/')[0];
-        std::string rightLabel = split(query,'/')[1];
+        std::string leftLabel = splits[0];
+        std::string rightLabel = splits[1];
+        plans[query].executedQuery = "(" + leftLabel + rightLabel + ")";
         plans[query].cost = estimateCostOfJoin(leftLabel,rightLabel,est);
     }
     else{
         for (int i = 0; i < splits.size()-1; ++i) {
-            std::string left = "";
-            std::string right = "";
+            std::string leftSub = "";
+            std::string rightSub = "";
             for (int j = 0; j < splits.size(); ++j) {
-                if(j<=i) left+=splits[j];
-                else right+=splits[j];
+                if(j<=i) leftSub+=splits[j]+'/';
+                else rightSub+=splits[j]+'/';
             }
-            bestPlan p1 = findBestPlan(originalQuery,left,graph,est);
-            bestPlan p2 = findBestPlan(originalQuery,right,graph,est);
+            // remove the last "/"
+            leftSub = leftSub.substr(0,leftSub.size()-1);
+            rightSub = rightSub.substr(0,rightSub.size()-1);
+            bestPlan p1 = SimpleEvaluator::findBestPlan(originalQuery,leftSub,graph,est);
+            bestPlan p2 = SimpleEvaluator::findBestPlan(originalQuery,rightSub,graph,est);
             // cost of joining
             std::string leftLabel = p1.executedQuery;
             std::string rightLabel = p2.executedQuery;
@@ -232,20 +252,21 @@ bestPlan SimpleEvaluator::findBestPlan(std::string originalQuery, std::string qu
                 plans[query] = p;
             }
             if(totalCost < plans[query].cost) {
-                plans[query].cost = totalCost;
-                std::string left = p1.executedQuery;
+                std::string leftquery = p1.executedQuery;
+                std::string rightquery = p2.executedQuery;
+                // if there is only 1 relation, then no brackets allowed.
                 uint32_t leftpmCounter = 0;
                 uint32_t rightpmCounter = 0;
-                std::string right = p2.executedQuery;
-                for (int j = 0; j < left.size(); ++j) {
-                    if(left[j]=='+'||left[j]=='-') leftpmCounter ++;
+                for (int j = 0; j < leftquery.size(); ++j) {
+                    if(leftquery[j]=='+'||leftquery[j]=='-') leftpmCounter ++;
                 }
-                for (int j = 0; j < right.size(); ++j) {
-                    if(right[j]=='+'||right[j]=='-') rightpmCounter ++;
+                for (int j = 0; j < rightquery.size(); ++j) {
+                    if(rightquery[j]=='+'||rightquery[j]=='-') rightpmCounter ++;
                 }
-                if(leftpmCounter !=1) left =  '(' + left + ')';
-                if(rightpmCounter!=1) right =  '(' + right + ')';
-                plans[query].executedQuery = left + right;
+                if(leftpmCounter !=1) leftquery =  '(' + leftquery + ')';
+                if(rightpmCounter!=1) rightquery =  '(' + rightquery + ')';
+                plans[query].executedQuery = leftquery + rightquery;
+                plans[query].cost = totalCost;
             }
         }
     }
@@ -253,7 +274,7 @@ bestPlan SimpleEvaluator::findBestPlan(std::string originalQuery, std::string qu
 }
 
 std::string SimpleEvaluator::preParse(std::string str,std::shared_ptr<SimpleGraph> &graph, std::shared_ptr<SimpleEstimator> est){
-    // if this query only contains 1 or 2 relation, no need to find a good plan, since this is only 1 plan possible..
+    // if this query only contains 1 or 2 relation, no need to find a good plan, since this is only 1 plan possible.
     if(split(str,'/').size() <= 2)
         return  str;
 
@@ -263,7 +284,14 @@ std::string SimpleEvaluator::preParse(std::string str,std::shared_ptr<SimpleGrap
         else parsed+=str[i];
     }
 
-    std::string temp = SimpleEvaluator::findBestPlan(parsed,parsed,graph,est).executedQuery;
+    std::string temp = "";
+    // if same query has already been executed before.
+    if(executedPlans.count(parsed)!=0) {
+        temp = executedPlans[parsed].executedQuery;
+    }
+    else {
+        temp = SimpleEvaluator::findBestPlan(parsed, parsed, graph, est).executedQuery;
+    }
     std::string queryPath = "";
     uint32_t pmCounter = 0;
     for (int j = 0; j < temp.length(); ++j) {
@@ -279,5 +307,11 @@ std::string SimpleEvaluator::preParse(std::string str,std::shared_ptr<SimpleGrap
             if(counter!=pmCounter)queryPath += '/';
         }
     }
+
+    // cache the plans.
+    if(executedPlans.count(parsed)==0)
+        executedPlans[parsed] = plans[parsed];
+    // clean the memory.
+    plans.clear();
     return  queryPath;
 }

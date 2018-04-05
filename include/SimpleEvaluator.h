@@ -23,6 +23,7 @@ class SimpleEvaluator : public Evaluator {
     std::shared_ptr<SimpleGraph> graph;
     std::shared_ptr<SimpleEstimator> est;
     std::map<std::string,bestPlan> plans;
+    std::map<std::string,bestPlan> executedPlans;
 
 public:
 
