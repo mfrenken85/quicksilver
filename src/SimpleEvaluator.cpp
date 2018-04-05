@@ -165,7 +165,7 @@ cardStat SimpleEvaluator::evaluate(RPQTree *query) {
               << std::chrono::duration<double, std::milli>(end - start).count() << " ms" << std::endl;
 
     //start = std::chrono::steady_clock::now();
-    //evaluate_aux(query);
+    evaluate_aux(query);
     //end = std::chrono::steady_clock::now();
     //std::cout << "Time to execute the original execution plan (without plan selecton) is: " << std::chrono::duration<double, std::milli>(end - start).count() << " ms" << std::endl;
 
