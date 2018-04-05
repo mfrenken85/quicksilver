@@ -4,7 +4,6 @@
 
 #include "SimpleEstimator.h"
 #include "SimpleEvaluator.h"
-#include "RPQTree.h"
 #include <chrono>
 
 SimpleEvaluator::SimpleEvaluator(std::shared_ptr<SimpleGraph> &g) {
