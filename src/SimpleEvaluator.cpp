@@ -241,14 +241,14 @@ bestPlan SimpleEvaluator::findBestPlan(std::string originalQuery, std::string qu
     if( intermediatePlans.count(originalQuery) !=0 )
         return intermediatePlans[originalQuery]; // best plan already calculated.
 
-    auto splits = split(query,'/');
-    uint32_t splitsSize = splits.size();
-    if ( splitsSize==1 ){
-        // if same query is already processed.
-        if(cachedIntermediateResults.count(query)!=0){
-            intermediatePlans[query].executedQuery = cachedIntermediateResults[query].executedQuery;
-            intermediatePlans[query].cost = cachedIntermediateResults[query].cost;
-        }else {
+    // if same query is already processed.
+   // if(cachedIntermediateResults.count(query)!=0){
+   //     intermediatePlans[query].executedQuery = cachedIntermediateResults[query].executedQuery;
+   //     intermediatePlans[query].cost = cachedIntermediateResults[query].cost;
+   // }else{
+        auto splits = split(query,'/');
+        uint32_t splitsSize = splits.size();
+        if ( splitsSize==1 ){
             if (intermediatePlans.count(query) == 0) {
                 bestPlan p;
                 p.executedQuery = "";
@@ -257,15 +257,8 @@ bestPlan SimpleEvaluator::findBestPlan(std::string originalQuery, std::string qu
             }
             intermediatePlans[query].executedQuery = query;
             intermediatePlans[query].cost = estimateCostOfJoin(query, "", est);
-            // cache the intermediate results.
-            cachedIntermediateResults[query] = intermediatePlans[query];
-        }
-    } else if( splitsSize == 2){
-        if(cachedIntermediateResults.count(query)!=0){
-            intermediatePlans[query].executedQuery = cachedIntermediateResults[query].executedQuery;
-            intermediatePlans[query].cost = cachedIntermediateResults[query].cost;
-        }else {
-            if (intermediatePlans.count(query) == 0) {
+        } else if( splitsSize == 2){
+        if (intermediatePlans.count(query) == 0) {
                 bestPlan p;
                 p.executedQuery = "";
                 p.cost = std::numeric_limits<int>::max();
@@ -275,16 +268,9 @@ bestPlan SimpleEvaluator::findBestPlan(std::string originalQuery, std::string qu
             std::string rightLabel = splits[1];
             intermediatePlans[query].executedQuery = "(" + leftLabel + rightLabel + ")";
             intermediatePlans[query].cost = estimateCostOfJoin(leftLabel, rightLabel, est);
-            // cache the intermediate results.
-            cachedIntermediateResults[query] = intermediatePlans[query];
         }
-    }
-    else{
-        if(cachedIntermediateResults.count(query)!=0){
-            intermediatePlans[query].executedQuery = cachedIntermediateResults[query].executedQuery;
-            intermediatePlans[query].cost = cachedIntermediateResults[query].cost;
-        }else {
-            for (int i = 0; i < splits.size() - 1; ++i) {
+        else{
+           for (int i = 0; i < splits.size() - 1; ++i) {
                 std::string leftSub = "";
                 std::string rightSub = "";
                 for (int j = 0; j < splits.size(); ++j) {
@@ -324,9 +310,9 @@ bestPlan SimpleEvaluator::findBestPlan(std::string originalQuery, std::string qu
                     intermediatePlans[query].cost = totalCost;
                 }
             }
-            // cache the intermediate results.
-            cachedIntermediateResults[query] = intermediatePlans[query];
-        }
+       // }
+        // cache the intermediate results.
+        // cachedIntermediateResults[query] = intermediatePlans[query];
     }
     return intermediatePlans[query];
 }
