@@ -5,6 +5,7 @@
 #include "SimpleEstimator.h"
 #include "SimpleEvaluator.h"
 #include <chrono>
+#include <sstream>
 
 SimpleEvaluator::SimpleEvaluator(std::shared_ptr<SimpleGraph> &g) {
 
@@ -175,7 +176,7 @@ std::vector<std::string> split(const std::string &s, char delim) {
     std::stringstream ss(s);
     std::string item;
     std::vector<std::string> tokens;
-    while (getline(ss, item, delim)) {
+    while (std::getline(ss, item, delim)) {
         tokens.push_back(item);
     }
     return tokens;
@@ -201,6 +202,9 @@ uint32_t estimateCostOfJoin(std::string left, std::string right, std::shared_ptr
 }
 
 // We use dynamic programming to find the best query execution plan.
+// later on possible greedy algorigthm, based on the query size.
+// cache the intermediate results.
+
 bestPlan SimpleEvaluator::findBestPlan(std::string originalQuery, std::string query, std::shared_ptr<SimpleGraph> &graph, std::shared_ptr<SimpleEstimator> est){
 
     if( plans.count(originalQuery) !=0 )
