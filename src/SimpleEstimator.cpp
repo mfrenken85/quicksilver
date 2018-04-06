@@ -62,6 +62,7 @@ void SimpleEstimator::prepare() {
 
     for (int i = 0; i < histLabels.size(); ++i) {
         labelCardStats.emplace(i , cardStat { histOut[i], histLabels[i], histIn[i]} );
+        std::cout << "Label " << i << " appeared " << histLabels[i]  << " times. with out:" << histOut[i] << " and in:" << histIn[i] << std::endl;
     }
 }
 
