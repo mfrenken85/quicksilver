@@ -20,7 +20,6 @@ public:
     ~RPQTree();
 
     static RPQTree* strToTree(std::string &str);
-    std::string toString();
 
     void print();
 

@@ -14,6 +14,12 @@ SimpleEvaluator::SimpleEvaluator(std::shared_ptr<SimpleGraph> &g) {
     est = nullptr; // estimator not attached by default
 }
 
+SimpleEvaluator::~SimpleEvaluator() {
+    // clean the memory.
+    cachedIntermediateResults.clear();
+    cachedBestPlans.clear();
+}
+
 void SimpleEvaluator::attachEstimator(std::shared_ptr<SimpleEstimator> &e) {
     est = e;
 }
@@ -141,6 +147,40 @@ std::shared_ptr<SimpleGraph> SimpleEvaluator::evaluate_aux(RPQTree *q) {
     return nullptr;
 }
 
+// split the string by a specific character.
+std::vector<std::string> split(const std::string &s, char delim) {
+    std::stringstream ss(s);
+    std::string item;
+    std::vector<std::string> tokens;
+    while (std::getline(ss, item, delim)) {
+        tokens.push_back(item);
+    }
+    return tokens;
+}
+
+// parse the query into plain text.
+std::string queryToString(RPQTree *query) {
+    std::string r = "";
+    std::string p = "";
+    std::string q = "";
+
+    if(query->left == nullptr && query->right == nullptr) {
+        r = ' ';
+        r+=query->data;
+        r += ' ';
+    } else {
+        if(query->left != nullptr) p = queryToString(query->left);
+        if(query->right!= nullptr) q = queryToString(query->right);
+        //r = '(' << data << ' ' << p << q << ')';
+        r += '(';
+        r += p;
+        r += query->data;
+        r += q;
+        r += ')';
+    }
+    return r;
+}
+
 cardStat SimpleEvaluator::evaluate(RPQTree *query) {
 
     // Since we do not want to change the program's structure,
@@ -150,7 +190,7 @@ cardStat SimpleEvaluator::evaluate(RPQTree *query) {
     // But since this is pretty cheap, and this save much time of programming since this does not change the program's structure.
     // Hence, we implemented it in this way.
     auto start = std::chrono::steady_clock::now();
-    auto querypath = query->toString();
+    auto querypath = queryToString(query);
     querypath = preParse(querypath, graph, est);
     RPQTree *newQuery = RPQTree::strToTree(querypath);
     auto end = std::chrono::steady_clock::now();
@@ -170,16 +210,6 @@ cardStat SimpleEvaluator::evaluate(RPQTree *query) {
     //std::cout << "Time to execute the original execution plan (without plan selecton) is: " << std::chrono::duration<double, std::milli>(end - start).count() << " ms" << std::endl;
 
     return SimpleEvaluator::computeStats(res);
-}
-
-std::vector<std::string> split(const std::string &s, char delim) {
-    std::stringstream ss(s);
-    std::string item;
-    std::vector<std::string> tokens;
-    while (std::getline(ss, item, delim)) {
-        tokens.push_back(item);
-    }
-    return tokens;
 }
 
 // We simply do the estimation on the entire 2 subtrees.
@@ -202,82 +232,106 @@ uint32_t estimateCostOfJoin(std::string left, std::string right, std::shared_ptr
 }
 
 // We use dynamic programming to find the best query execution plan.
-// later on possible greedy algorigthm, based on the query size.
-// cache the intermediate results.
-
+// For further development, we could also implement the greedy algorithm.
+// Since dynamic programming may not be suitable for very larger queries (like number of joins> 15).
+// We could implement both greedy algorithm and dynamic programming, when larger queries are encountered.
+// We firstly use greedy algorithm to split the query and process the small queries with dynamic programming.
 bestPlan SimpleEvaluator::findBestPlan(std::string originalQuery, std::string query, std::shared_ptr<SimpleGraph> &graph, std::shared_ptr<SimpleEstimator> est){
 
-    if( plans.count(originalQuery) !=0 )
-        return plans[originalQuery]; // best plan already calculated.
+    if( intermediatePlans.count(originalQuery) !=0 )
+        return intermediatePlans[originalQuery]; // best plan already calculated.
 
     auto splits = split(query,'/');
     uint32_t splitsSize = splits.size();
     if ( splitsSize==1 ){
-        if(plans.count(query)==0) {
-            bestPlan p;
-            p.executedQuery = "";
-            p.cost = std::numeric_limits<int>::max();
-            plans[query] = p;
-        }
-        plans[query].executedQuery = query;
-        plans[query].cost = estimateCostOfJoin(query,"",est);
-    } else if( splitsSize == 2){
-        if(plans.count(query)==0) {
-            bestPlan p;
-            p.executedQuery = "";
-            p.cost = std::numeric_limits<int>::max();
-            plans[query] = p;
-        }
-        std::string leftLabel = splits[0];
-        std::string rightLabel = splits[1];
-        plans[query].executedQuery = "(" + leftLabel + rightLabel + ")";
-        plans[query].cost = estimateCostOfJoin(leftLabel,rightLabel,est);
-    }
-    else{
-        for (int i = 0; i < splits.size()-1; ++i) {
-            std::string leftSub = "";
-            std::string rightSub = "";
-            for (int j = 0; j < splits.size(); ++j) {
-                if(j<=i) leftSub+=splits[j]+'/';
-                else rightSub+=splits[j]+'/';
-            }
-            // remove the last "/"
-            leftSub = leftSub.substr(0,leftSub.size()-1);
-            rightSub = rightSub.substr(0,rightSub.size()-1);
-            bestPlan p1 = SimpleEvaluator::findBestPlan(originalQuery,leftSub,graph,est);
-            bestPlan p2 = SimpleEvaluator::findBestPlan(originalQuery,rightSub,graph,est);
-            // cost of joining
-            std::string leftLabel = p1.executedQuery;
-            std::string rightLabel = p2.executedQuery;
-            uint32_t totalCost = estimateCostOfJoin(leftLabel,rightLabel,est);
-            if(plans.count(query)==0) {
+        // if same query is already processed.
+        if(cachedIntermediateResults.count(query)!=0){
+            intermediatePlans[query].executedQuery = cachedIntermediateResults[query].executedQuery;
+            intermediatePlans[query].cost = cachedIntermediateResults[query].cost;
+        }else {
+            if (intermediatePlans.count(query) == 0) {
                 bestPlan p;
                 p.executedQuery = "";
                 p.cost = std::numeric_limits<int>::max();
-                plans[query] = p;
+                intermediatePlans[query] = p;
             }
-            if(totalCost < plans[query].cost) {
-                std::string leftquery = p1.executedQuery;
-                std::string rightquery = p2.executedQuery;
-                // if there is only 1 relation, then no brackets allowed.
-                uint32_t leftpmCounter = 0;
-                uint32_t rightpmCounter = 0;
-                for (int j = 0; j < leftquery.size(); ++j) {
-                    if(leftquery[j]=='+'||leftquery[j]=='-') leftpmCounter ++;
-                }
-                for (int j = 0; j < rightquery.size(); ++j) {
-                    if(rightquery[j]=='+'||rightquery[j]=='-') rightpmCounter ++;
-                }
-                if(leftpmCounter !=1) leftquery =  '(' + leftquery + ')';
-                if(rightpmCounter!=1) rightquery =  '(' + rightquery + ')';
-                plans[query].executedQuery = leftquery + rightquery;
-                plans[query].cost = totalCost;
+            intermediatePlans[query].executedQuery = query;
+            intermediatePlans[query].cost = estimateCostOfJoin(query, "", est);
+            // cache the intermediate results.
+            cachedIntermediateResults[query] = intermediatePlans[query];
+        }
+    } else if( splitsSize == 2){
+        if(cachedIntermediateResults.count(query)!=0){
+            intermediatePlans[query].executedQuery = cachedIntermediateResults[query].executedQuery;
+            intermediatePlans[query].cost = cachedIntermediateResults[query].cost;
+        }else {
+            if (intermediatePlans.count(query) == 0) {
+                bestPlan p;
+                p.executedQuery = "";
+                p.cost = std::numeric_limits<int>::max();
+                intermediatePlans[query] = p;
             }
+            std::string leftLabel = splits[0];
+            std::string rightLabel = splits[1];
+            intermediatePlans[query].executedQuery = "(" + leftLabel + rightLabel + ")";
+            intermediatePlans[query].cost = estimateCostOfJoin(leftLabel, rightLabel, est);
+            // cache the intermediate results.
+            cachedIntermediateResults[query] = intermediatePlans[query];
         }
     }
-    return plans[query];
+    else{
+        if(cachedIntermediateResults.count(query)!=0){
+            intermediatePlans[query].executedQuery = cachedIntermediateResults[query].executedQuery;
+            intermediatePlans[query].cost = cachedIntermediateResults[query].cost;
+        }else {
+            for (int i = 0; i < splits.size() - 1; ++i) {
+                std::string leftSub = "";
+                std::string rightSub = "";
+                for (int j = 0; j < splits.size(); ++j) {
+                    if (j <= i) leftSub += splits[j] + '/';
+                    else rightSub += splits[j] + '/';
+                }
+                // remove the last "/"
+                leftSub = leftSub.substr(0, leftSub.size() - 1);
+                rightSub = rightSub.substr(0, rightSub.size() - 1);
+                bestPlan p1 = SimpleEvaluator::findBestPlan(originalQuery, leftSub, graph, est);
+                bestPlan p2 = SimpleEvaluator::findBestPlan(originalQuery, rightSub, graph, est);
+                // cost of joining
+                std::string leftLabel = p1.executedQuery;
+                std::string rightLabel = p2.executedQuery;
+                uint32_t totalCost = estimateCostOfJoin(leftLabel, rightLabel, est);
+                if (intermediatePlans.count(query) == 0) {
+                    bestPlan p;
+                    p.executedQuery = "";
+                    p.cost = std::numeric_limits<int>::max();
+                    intermediatePlans[query] = p;
+                }
+                if (totalCost < intermediatePlans[query].cost) {
+                    std::string leftquery = p1.executedQuery;
+                    std::string rightquery = p2.executedQuery;
+                    // if there is only 1 relation, then no brackets allowed.
+                    uint32_t leftpmCounter = 0;
+                    uint32_t rightpmCounter = 0;
+                    for (int j = 0; j < leftquery.size(); ++j) {
+                        if (leftquery[j] == '+' || leftquery[j] == '-') leftpmCounter++;
+                    }
+                    for (int j = 0; j < rightquery.size(); ++j) {
+                        if (rightquery[j] == '+' || rightquery[j] == '-') rightpmCounter++;
+                    }
+                    if (leftpmCounter != 1) leftquery = '(' + leftquery + ')';
+                    if (rightpmCounter != 1) rightquery = '(' + rightquery + ')';
+                    intermediatePlans[query].executedQuery = leftquery + rightquery;
+                    intermediatePlans[query].cost = totalCost;
+                }
+            }
+            // cache the intermediate results.
+            cachedIntermediateResults[query] = intermediatePlans[query];
+        }
+    }
+    return intermediatePlans[query];
 }
 
+// preparse the input query, select the best query execution plan.
 std::string SimpleEvaluator::preParse(std::string str,std::shared_ptr<SimpleGraph> &graph, std::shared_ptr<SimpleEstimator> est){
     // if this query only contains 1 or 2 relation, no need to find a good plan, since this is only 1 plan possible.
     if(split(str,'/').size() <= 2)
@@ -291,12 +345,15 @@ std::string SimpleEvaluator::preParse(std::string str,std::shared_ptr<SimpleGrap
 
     std::string temp = "";
     // if same query has already been executed before.
-    if(executedPlans.count(parsed)!=0) {
-        temp = executedPlans[parsed].executedQuery;
+    if(cachedBestPlans.count(parsed)!=0) {
+        temp = cachedBestPlans[parsed].executedQuery;
     }
     else {
         temp = SimpleEvaluator::findBestPlan(parsed, parsed, graph, est).executedQuery;
+        // cache the best plan.
+        cachedBestPlans[parsed] = intermediatePlans[parsed];
     }
+
     std::string queryPath = "";
     uint32_t pmCounter = 0;
     for (int j = 0; j < temp.length(); ++j) {
@@ -312,11 +369,7 @@ std::string SimpleEvaluator::preParse(std::string str,std::shared_ptr<SimpleGrap
             if(counter!=pmCounter)queryPath += '/';
         }
     }
-
-    // cache the plans.
-    if(executedPlans.count(parsed)==0)
-        executedPlans[parsed] = plans[parsed];
-    // clean the memory.
-    plans.clear();
+    // clean the caches.
+    intermediatePlans.clear();
     return  queryPath;
 }

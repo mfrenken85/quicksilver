@@ -22,13 +22,20 @@ class SimpleEvaluator : public Evaluator {
 
     std::shared_ptr<SimpleGraph> graph;
     std::shared_ptr<SimpleEstimator> est;
-    std::map<std::string,bestPlan> plans;
-    std::map<std::string,bestPlan> executedPlans;
+
+    // the data structure used to find the best plan.
+    // the best plan is => intermediatePlans[original query]
+    std::map<std::string,bestPlan> intermediatePlans;
+
+    // cache the executed bestPlans (the whole plan).
+    std::map<std::string,bestPlan> cachedBestPlans;
+    // cache the intermediate results.
+    std::map<std::string,bestPlan> cachedIntermediateResults;
 
 public:
 
     explicit SimpleEvaluator(std::shared_ptr<SimpleGraph> &g);
-    ~SimpleEvaluator() = default;
+    ~SimpleEvaluator();
 
     void prepare() override ;
     cardStat evaluate(RPQTree *query) override;
