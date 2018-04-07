@@ -233,11 +233,9 @@ uint32_t estimateCostOfJoin(std::string left, std::string right, std::shared_ptr
 }
 
 // We use dynamic programming to find the best query execution plan.
-// For further development, we could also implement the greedy algorithm.
-// Since dynamic programming may not be suitable for very larger queries (like number of joins> 15).
-// We could implement both greedy algorithm and dynamic programming, when larger queries are encountered.
-// We firstly use greedy algorithm to split the query and process the small queries with dynamic programming.
-bestPlan SimpleEvaluator::findBestPlan(std::string originalQuery, std::string query, std::shared_ptr<SimpleGraph> &graph, std::shared_ptr<SimpleEstimator> &est){
+bestPlan SimpleEvaluator::findBestPlanDynamic( std::string query,
+                                              std::shared_ptr<SimpleGraph> &graph,
+                                              std::shared_ptr<SimpleEstimator> &est){
 
     //if( intermediatePlans.count(originalQuery) !=0 )
         //return intermediatePlans[originalQuery]; // best plan already calculated.
@@ -252,23 +250,19 @@ bestPlan SimpleEvaluator::findBestPlan(std::string originalQuery, std::string qu
         if ( splitsSize==1 ){
             if (intermediatePlans.count(query) == 0) {
                 bestPlan p;
-                p.executedQuery = "";
-                p.cost = std::numeric_limits<int>::max();
+                p.executedQuery = query;
+                p.cost = estimateCostOfJoin(query, "", est);
                 intermediatePlans[query] = p;
             }
-            intermediatePlans[query].executedQuery = query;
-            intermediatePlans[query].cost = estimateCostOfJoin(query, "", est);
         } else if( splitsSize == 2){
             if (intermediatePlans.count(query) == 0) {
+                std::string leftLabel = splits[0];
+                std::string rightLabel = splits[1];
                 bestPlan p;
-                p.executedQuery = "";
-                p.cost = std::numeric_limits<int>::max();
+                p.executedQuery = "(" + leftLabel + rightLabel + ")";
+                p.cost = estimateCostOfJoin(leftLabel, rightLabel, est);
                 intermediatePlans[query] = p;
             }
-            std::string leftLabel = splits[0];
-            std::string rightLabel = splits[1];
-            intermediatePlans[query].executedQuery = "(" + leftLabel + rightLabel + ")";
-            intermediatePlans[query].cost = estimateCostOfJoin(leftLabel, rightLabel, est);
         }
         else{
            for (int i = 0; i < splits.size() - 1; ++i) {
@@ -281,8 +275,8 @@ bestPlan SimpleEvaluator::findBestPlan(std::string originalQuery, std::string qu
                 // remove the last "/"
                 leftSub = leftSub.substr(0, leftSub.size() - 1);
                 rightSub = rightSub.substr(0, rightSub.size() - 1);
-                bestPlan p1 = SimpleEvaluator::findBestPlan(originalQuery, leftSub, graph, est);
-                bestPlan p2 = SimpleEvaluator::findBestPlan(originalQuery, rightSub, graph, est);
+                bestPlan p1 = SimpleEvaluator::findBestPlanDynamic(leftSub, graph, est);
+                bestPlan p2 = SimpleEvaluator::findBestPlanDynamic(rightSub, graph, est);
                 // cost of joining
                 std::string leftLabel = p1.executedQuery;
                 std::string rightLabel = p2.executedQuery;
@@ -316,6 +310,61 @@ bestPlan SimpleEvaluator::findBestPlan(std::string originalQuery, std::string qu
     return intermediatePlans[query];
 }
 
+// greedy algorithm to find the best execution plan,
+// Since dynamic programming may not be suitable for very larger queries (like number of joins> 15).
+// when we encounter queries larger than 15, we use greedy algorithm.
+// moreover, intermediate results are not stored for greedy algorithm.
+bestPlan SimpleEvaluator::findBestPlanGreedy(std::string query,
+                                             std::shared_ptr<SimpleGraph> &graph,
+                                             std::shared_ptr<SimpleEstimator> &est) {
+    auto splits = split(query,'/');
+    uint32_t splitsSize = splits.size();
+    // splitsSize==1 and splitsSize==2 is only for testing purpose, since greedy alrorithm is only used when query is large (join > 15).
+    if ( splitsSize==1 ){
+        if (intermediatePlans.count(query) == 0) {
+            bestPlan p;
+            p.executedQuery = query;
+            p.cost = estimateCostOfJoin(query, "", est);
+            intermediatePlans[query] = p;
+        }
+    } else if( splitsSize == 2){
+        if (intermediatePlans.count(query) == 0) {
+            std::string leftLabel = splits[0];
+            std::string rightLabel = splits[1];
+            bestPlan p;
+            p.executedQuery = "(" + leftLabel + rightLabel + ")";
+            p.cost = estimateCostOfJoin(leftLabel, rightLabel, est);
+            intermediatePlans[query] = p;
+        }
+    }else {
+        // we do not store intermediate results for greedy algorithm.
+        uint32_t totalCost = 0;
+        while (splitsSize > 1) {
+            uint32_t selectedJoinIndex = -1;
+            uint32_t joinSize = std::numeric_limits<int>::max();
+            for (int i = 0; i < splits.size() - 1; ++i) {
+                auto tempCost = estimateCostOfJoin(splits[i], splits[i + 1], est);
+                if (tempCost < joinSize) {
+                    joinSize = tempCost;
+                    selectedJoinIndex = i;
+                }
+            }
+            totalCost += joinSize;
+            splits.insert(splits.begin() + selectedJoinIndex,
+                          "(" + splits[selectedJoinIndex] + splits[selectedJoinIndex + 1] + ")");
+            splits.erase(splits.begin() + selectedJoinIndex + 1);
+            splits.erase(splits.begin() + selectedJoinIndex + 1);
+            splitsSize = splits.size();
+        }
+        // for greedy algorithm, we only store the final execution plan.
+        bestPlan p;
+        p.executedQuery = splits[0].substr(1, splits[0].size() - 2); // remove the left most and right most brackets.
+        p.cost = totalCost;
+        intermediatePlans[query] = p;
+    }
+    return intermediatePlans[query];
+}
+
 // preparse the input query, select the best query execution plan.
 std::string SimpleEvaluator::preParse(std::string str,std::shared_ptr<SimpleGraph> &graph, std::shared_ptr<SimpleEstimator> &est){
     // if this query only contains 1 or 2 relation, no need to find a good plan, since this is only 1 plan possible.
@@ -334,26 +383,24 @@ std::string SimpleEvaluator::preParse(std::string str,std::shared_ptr<SimpleGrap
         temp = cachedBestPlans[parsed].executedQuery;
     }
     else {
-        temp = SimpleEvaluator::findBestPlan(parsed, parsed, graph, est).executedQuery;
-        // cache the final best plan.
-        cachedBestPlans[parsed] = intermediatePlans[parsed];
+        auto splits = split(parsed,'/');
+        if(splits.size()<=15)
+            temp = SimpleEvaluator::findBestPlanDynamic(parsed, graph, est).executedQuery;
+        else
+            temp = SimpleEvaluator::findBestPlanGreedy( parsed, graph, est).executedQuery;
     }
 
     std::string queryPath = "";
-    uint32_t pmCounter = 0;
-    for (int j = 0; j < temp.length(); ++j) {
-        if(temp[j]=='+' || temp[j]=='-'){
-            pmCounter++;
-        }
-    }
-    uint32_t counter = 0;
-    for (int j = 0; j < temp.length(); ++j) {
+    temp.erase(std::remove_if(temp.begin(), temp.end(), ::isspace), temp.end()); // remove spaces
+    for (int j = 0; j < temp.length() -1; ++j) {
+        char left = temp[j];
+        char right = temp[j+1];
         queryPath += temp[j];
-        if(temp[j]=='+' || temp[j]=='-'){
-            counter++;
-            if(counter!=pmCounter)queryPath += '/';
+        if( ((left == '+'|| left == '-' || left == ')') && ( right == '('|| ('0' < right && right < '9')))){
+            queryPath += '/';
         }
     }
+    queryPath += temp[temp.size()-1];
 
     // cache the intermediate results.
     for (std::pair<std::string,bestPlan> plan : intermediatePlans) {
@@ -365,3 +412,4 @@ std::string SimpleEvaluator::preParse(std::string str,std::shared_ptr<SimpleGrap
     intermediatePlans.clear();
     return  queryPath;
 }
+

@@ -38,7 +38,10 @@ public:
     void prepare() override ;
     cardStat evaluate(RPQTree *query) override;
 
-    bestPlan findBestPlan(std::string originalQuery, std::string query, std::shared_ptr<SimpleGraph> &graph, std::shared_ptr<SimpleEstimator> &est);
+    bestPlan findBestPlanDynamic(std::string query, std::shared_ptr<SimpleGraph> &graph,
+                                 std::shared_ptr<SimpleEstimator> &est);
+    bestPlan findBestPlanGreedy(std::string query, std::shared_ptr<SimpleGraph> &graph,
+                                std::shared_ptr<SimpleEstimator> &est);
     std::string preParse(std::string str,std::shared_ptr<SimpleGraph> &graph, std::shared_ptr<SimpleEstimator> &est);
 
     void attachEstimator(std::shared_ptr<SimpleEstimator> &e);
