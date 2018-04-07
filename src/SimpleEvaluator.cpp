@@ -239,8 +239,8 @@ uint32_t estimateCostOfJoin(std::string left, std::string right, std::shared_ptr
 // We firstly use greedy algorithm to split the query and process the small queries with dynamic programming.
 bestPlan SimpleEvaluator::findBestPlan(std::string originalQuery, std::string query, std::shared_ptr<SimpleGraph> &graph, std::shared_ptr<SimpleEstimator> &est){
 
-    if( intermediatePlans.count(originalQuery) !=0 )
-        return intermediatePlans[originalQuery]; // best plan already calculated.
+    //if( intermediatePlans.count(originalQuery) !=0 )
+        //return intermediatePlans[originalQuery]; // best plan already calculated.
 
     // if same query is already processed.
     if(cachedBestPlans.count(query)!=0){
@@ -312,8 +312,6 @@ bestPlan SimpleEvaluator::findBestPlan(std::string originalQuery, std::string qu
                 }
             }
         }
-        // cache the intermediate results.
-        cachedBestPlans[query] = intermediatePlans[query];
     }
     return intermediatePlans[query];
 }
@@ -337,7 +335,7 @@ std::string SimpleEvaluator::preParse(std::string str,std::shared_ptr<SimpleGrap
     }
     else {
         temp = SimpleEvaluator::findBestPlan(parsed, parsed, graph, est).executedQuery;
-        // cache the best plan.
+        // cache the final best plan.
         cachedBestPlans[parsed] = intermediatePlans[parsed];
     }
 
@@ -354,6 +352,13 @@ std::string SimpleEvaluator::preParse(std::string str,std::shared_ptr<SimpleGrap
         if(temp[j]=='+' || temp[j]=='-'){
             counter++;
             if(counter!=pmCounter)queryPath += '/';
+        }
+    }
+
+    // cache the intermediate results.
+    for (std::pair<std::string,bestPlan> plan : intermediatePlans) {
+        if (cachedBestPlans.count(plan.first) == 0) {
+            cachedBestPlans[plan.first] = plan.second;
         }
     }
     // clean the caches.
