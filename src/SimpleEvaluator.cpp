@@ -56,6 +56,34 @@ cardStat SimpleEvaluator::ll_computeStats(std::shared_ptr<SimpleGraph> &g) {
 }
 
 std::shared_ptr<SimpleGraph> SimpleEvaluator::project(uint32_t projectLabel, bool inverse, std::shared_ptr<SimpleGraph> &in) {
+    // get type of graph, select proper project
+
+    if (in->getType() == 0){
+        SimpleEvaluator::vec_project(projectLabel, inverse, in);
+    } else if (in->getType() == 1) {
+        SimpleEvaluator::ll_project(projectLabel, inverse, in);
+    }
+}
+
+std::shared_ptr<SimpleGraph> SimpleEvaluator::join(std::shared_ptr<SimpleGraph> &left, std::shared_ptr<SimpleGraph> &right) {
+    // get type of graph, select proper join
+
+    if (left->getType() == 0){
+        if (right->getType() == 0){
+            //
+        } else if (right->getType() == 1) {
+            //
+        }
+    } else if (left->getType() == 1) {
+        if (right->getType() == 0){
+            //
+        } else if (right->getType() == 1) {
+            //
+        }
+    }
+}
+
+std::shared_ptr<SimpleGraph> SimpleEvaluator::vec_project(uint32_t projectLabel, bool inverse, std::shared_ptr<SimpleGraph> &in) {
 
     auto out = std::make_shared<SimpleGraph>(in->getNoVertices());
     out->setNoLabels(in->getNoLabels());
@@ -92,7 +120,7 @@ std::shared_ptr<SimpleGraph> SimpleEvaluator::project(uint32_t projectLabel, boo
 
 
 
-std::shared_ptr<SimpleGraph> SimpleEvaluator::join(std::shared_ptr<SimpleGraph> &left, std::shared_ptr<SimpleGraph> &right) {
+std::shared_ptr<SimpleGraph> SimpleEvaluator::vec_join(std::shared_ptr<SimpleGraph> &left, std::shared_ptr<SimpleGraph> &right) {
 
     auto out = std::make_shared<SimpleGraph>(left->getNoVertices());
     out->setNoLabels(1);

@@ -12,12 +12,19 @@ uint32_t SimpleGraph::getNoVertices() const {
     return V;
 }
 
+uint32_t SimpleGraph::getType() {
+    return dataType;
+}
+
 void SimpleGraph::setNoVertices(uint32_t n) {
     V = n;
+    // normal
     //adj.resize(V);
     //reverse_adj.resize(V);
+    //dataType = 0;
 
     // linked list
+    dataType = 1;
     tableHead = createTableHead();
     reverse_tableHead = createTableHead();
     tablePointers[0] = tableHead;

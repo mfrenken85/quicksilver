@@ -32,6 +32,8 @@ public:
     static std::shared_ptr<SimpleGraph> project(uint32_t label, bool inverse, std::shared_ptr<SimpleGraph> &g);
     static std::shared_ptr<SimpleGraph> join(std::shared_ptr<SimpleGraph> &left, std::shared_ptr<SimpleGraph> &right);
 
+    static std::shared_ptr<SimpleGraph> vec_project(uint32_t label, bool inverse, std::shared_ptr<SimpleGraph> &g);
+    static std::shared_ptr<SimpleGraph> vec_join(std::shared_ptr<SimpleGraph> &left, std::shared_ptr<SimpleGraph> &right);
 
     std::shared_ptr<SimpleGraph> ll_evaluate_aux(RPQTree *q);
     static std::shared_ptr<SimpleGraph> ll_project(uint32_t label, bool inverse, std::shared_ptr<SimpleGraph> &g);
