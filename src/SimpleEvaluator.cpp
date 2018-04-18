@@ -157,6 +157,21 @@ std::vector<std::string> split(const std::string &s, char delim) {
     return tokens;
 }
 
+// add slashes into the query.
+std::string addSlashes(std::string query){
+    std::string queryPath = "";
+    for (int j = 0; j < query.length() -1; ++j) {
+        char left = query[j];
+        char right = query[j+1];
+        queryPath += query[j];
+        if( ((left == '+'|| left == '-' || left == ')') && ( right == '('|| ('0' < right && right < '9')))){
+            queryPath += '/';
+        }
+    }
+    queryPath += query[query.size()-1];
+    return queryPath;
+}
+
 // parse the query into plain text.
 std::string queryToString(RPQTree *query) {
     std::string r = "";
@@ -189,14 +204,39 @@ cardStat SimpleEvaluator::evaluate(RPQTree *query) {
     // But since this is pretty cheap, and this save much time of programming since this does not change the program's structure.
     // Hence, we implemented it in this way.
 
+    // executing with best plan selected by dynamic programming.
     auto start = std::chrono::steady_clock::now();
     auto querypath = queryToString(query);
     querypath = preParse(querypath, graph, est);
     RPQTree *newQuery = RPQTree::strToTree(querypath);
     auto end = std::chrono::steady_clock::now();
+    auto timeToGetPlan =  std::chrono::duration<double, std::milli>(end - start).count();
     std::cout << "\nTime to select the best execution plan is: "
-              << std::chrono::duration<double, std::milli>(end - start).count() << " ms" << std::endl;
+              << timeToGetPlan << " ms" << std::endl;
     std::cout << "The best execution plan is: " + querypath << std::endl;
+
+    /*
+    // for testing purpose
+    std::ofstream myfile;
+    myfile.open ("dpPlan.txt",std::ios_base::app);
+    myfile <<  "Running query " << queryToString(query) << ".\n";
+    auto total =  0;
+    uint32_t times = 100;
+    for (int i = 0; i < times; ++i) {
+        auto start = std::chrono::steady_clock::now();
+        auto res = evaluate_aux(newQuery);
+        auto end = std::chrono::steady_clock::now();
+        auto time =  std::chrono::duration<double, std::milli>(end - start).count();
+        std::cout << "Time to execute the best execution plan is: " << time << " ms" << std::endl;
+        total += time;
+        myfile << i << " th run takes " << time << " ms.\n";
+    }
+
+    myfile <<  " Time to select the best execution plan is " << timeToGetPlan << " ms.\n";
+    myfile <<  " The selected best plan is " << querypath << " ms.\n";
+    myfile <<  " Average running time is " << total/times << " ms.\n";
+    myfile.close();
+    */
 
     start = std::chrono::steady_clock::now();
     auto res = evaluate_aux(newQuery);
@@ -205,11 +245,35 @@ cardStat SimpleEvaluator::evaluate(RPQTree *query) {
               << std::chrono::duration<double, std::milli>(end - start).count() << " ms" << std::endl;
 
     /*
+    // for testing purpose.
+    // executing with original plan.
+    std::ofstream myfile;
+    myfile.open ("originalPlan.txt",std::ios_base::app);
+    myfile <<  "Running query " << queryToString(query) << ".\n";
+    auto total =  0;
+    uint32_t times = 100;
+    for (int i = 0; i < times; ++i) {
+        auto start = std::chrono::steady_clock::now();
+        auto res = evaluate_aux(query);
+        auto end = std::chrono::steady_clock::now();
+        auto time =  std::chrono::duration<double, std::milli>(end - start).count();
+        std::cout << "Time to execute the original execution plan (without plan optimization) is: " << time << " ms" << std::endl;
+        total += time;
+        myfile << i << " th run takes " << time << " ms.\n";
+    }
+    myfile <<  " Average running time is " << total/times << " ms.\n";
+    myfile.close();
+    */
+
+    /*
+    // executing with original plan.
     auto start = std::chrono::steady_clock::now();
     auto res = evaluate_aux(query);
     auto end = std::chrono::steady_clock::now();
-    std::cout << "Time to execute the original execution plan (without plan selecton) is: " << std::chrono::duration<double, std::milli>(end - start).count() << " ms" << std::endl;
+    auto time =  std::chrono::duration<double, std::milli>(end - start).count();
+    std::cout << "Time to execute the original execution plan (without plan optimization) is: " << time << " ms" << std::endl;
     */
+
     return SimpleEvaluator::computeStats(res);
 }
 
@@ -229,6 +293,7 @@ uint32_t estimateCostOfJoin(std::string left, std::string right, std::shared_ptr
     RPQTree *queryTree = RPQTree::strToTree(queryPath);
     //queryTree->print();
     cardStat card = est->estimate(queryTree);
+    delete queryTree;
     return card.noPaths;
 }
 
@@ -275,9 +340,10 @@ bestPlan SimpleEvaluator::findBestPlanDynamic( std::string query,
                 // remove the last "/"
                 leftSub = leftSub.substr(0, leftSub.size() - 1);
                 rightSub = rightSub.substr(0, rightSub.size() - 1);
+
                 bestPlan p1 = SimpleEvaluator::findBestPlanDynamic(leftSub, graph, est);
                 bestPlan p2 = SimpleEvaluator::findBestPlanDynamic(rightSub, graph, est);
-                // cost of joining
+                // cost of join
                 std::string leftLabel = p1.executedQuery;
                 std::string rightLabel = p2.executedQuery;
                 uint32_t totalCost = estimateCostOfJoin(leftLabel, rightLabel, est);
@@ -290,17 +356,8 @@ bestPlan SimpleEvaluator::findBestPlanDynamic( std::string query,
                 if (totalCost < intermediatePlans[query].cost) {
                     std::string leftquery = p1.executedQuery;
                     std::string rightquery = p2.executedQuery;
-                    // if there is only 1 relation, then no brackets allowed.
-                    uint32_t leftpmCounter = 0;
-                    uint32_t rightpmCounter = 0;
-                    for (int j = 0; j < leftquery.size(); ++j) {
-                        if (leftquery[j] == '+' || leftquery[j] == '-') leftpmCounter++;
-                    }
-                    for (int j = 0; j < rightquery.size(); ++j) {
-                        if (rightquery[j] == '+' || rightquery[j] == '-') rightpmCounter++;
-                    }
-                    if (leftpmCounter != 1) leftquery = '(' + leftquery + ')';
-                    if (rightpmCounter != 1) rightquery = '(' + rightquery + ')';
+                    leftquery = '(' + leftquery + ')';
+                    rightquery = '(' + rightquery + ')';
                     intermediatePlans[query].executedQuery = leftquery + rightquery;
                     intermediatePlans[query].cost = totalCost;
                 }
@@ -317,28 +374,22 @@ bestPlan SimpleEvaluator::findBestPlanDynamic( std::string query,
 bestPlan SimpleEvaluator::findBestPlanGreedy(std::string query,
                                              std::shared_ptr<SimpleGraph> &graph,
                                              std::shared_ptr<SimpleEstimator> &est) {
+    bestPlan p;
     auto splits = split(query,'/');
     uint32_t splitsSize = splits.size();
     // splitsSize==1 and splitsSize==2 is only for testing purpose, since greedy alrorithm is only used when query is large (join > 15).
     if ( splitsSize==1 ){
-        if (intermediatePlans.count(query) == 0) {
-            bestPlan p;
-            p.executedQuery = query;
-            p.cost = estimateCostOfJoin(query, "", est);
-            intermediatePlans[query] = p;
-        }
+        p.executedQuery = query;
+        p.cost = estimateCostOfJoin(query, "", est);
     } else if( splitsSize == 2){
-        if (intermediatePlans.count(query) == 0) {
-            std::string leftLabel = splits[0];
-            std::string rightLabel = splits[1];
-            bestPlan p;
-            p.executedQuery = "(" + leftLabel + rightLabel + ")";
-            p.cost = estimateCostOfJoin(leftLabel, rightLabel, est);
-            intermediatePlans[query] = p;
-        }
+        std::string leftLabel = splits[0];
+        std::string rightLabel = splits[1];
+        bestPlan p;
+        p.executedQuery = "(" + query + ")";
+        p.cost = estimateCostOfJoin(leftLabel, rightLabel, est);
     }else {
-        // we do not store intermediate results for greedy algorithm.
         uint32_t totalCost = 0;
+        // keep joining until there is only 1 element left, which is the final execution plan..
         while (splitsSize > 1) {
             uint32_t selectedJoinIndex = -1;
             uint32_t joinSize = std::numeric_limits<int>::max();
@@ -349,19 +400,17 @@ bestPlan SimpleEvaluator::findBestPlanGreedy(std::string query,
                     selectedJoinIndex = i;
                 }
             }
-            totalCost += joinSize;
             splits.insert(splits.begin() + selectedJoinIndex,
-                          "(" + splits[selectedJoinIndex] + splits[selectedJoinIndex + 1] + ")");
+                          "(" + splits[selectedJoinIndex] + '/' + splits[selectedJoinIndex + 1] + ")");
             splits.erase(splits.begin() + selectedJoinIndex + 1);
             splits.erase(splits.begin() + selectedJoinIndex + 1);
             splitsSize = splits.size();
+            totalCost = joinSize;
         }
-        // for greedy algorithm, we only store the final execution plan.
-        bestPlan p;
         p.executedQuery = splits[0].substr(1, splits[0].size() - 2); // remove the left most and right most brackets.
         p.cost = totalCost;
-        intermediatePlans[query] = p;
     }
+    intermediatePlans[query] = p;
     return intermediatePlans[query];
 }
 
@@ -389,19 +438,9 @@ std::string SimpleEvaluator::preParse(std::string str,std::shared_ptr<SimpleGrap
         if(splits.size()<=15)
             temp = SimpleEvaluator::findBestPlanDynamic(parsed, graph, est).executedQuery;
         else
-            temp = SimpleEvaluator::findBestPlanGreedy( parsed, graph, est).executedQuery;
+            temp = SimpleEvaluator::findBestPlanGreedy(parsed, graph, est).executedQuery;
     }
-
-    std::string queryPath = "";
-    for (int j = 0; j < temp.length() -1; ++j) {
-        char left = temp[j];
-        char right = temp[j+1];
-        queryPath += temp[j];
-        if( ((left == '+'|| left == '-' || left == ')') && ( right == '('|| ('0' < right && right < '9')))){
-            queryPath += '/';
-        }
-    }
-    queryPath += temp[temp.size()-1];
+    std::string queryPath = addSlashes(temp);
 
     // cache the intermediate results.
     for (std::pair<std::string,bestPlan> plan : intermediatePlans) {
