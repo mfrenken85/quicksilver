@@ -24,7 +24,6 @@ public:
 protected:
     uint32_t V;
     uint32_t L;
-    uint32_t dataType;
 
 public:
 
@@ -44,7 +43,7 @@ public:
     void setNoLabels(uint32_t noLabels);
 
     // linked list
-    uint32_t getType();
+
 
     struct AdjListNode
     {
