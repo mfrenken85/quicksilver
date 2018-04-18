@@ -137,92 +137,26 @@ SimpleGraph::AdjTable* SimpleGraph::createTableHead() {
     table->head = 0;
     return table;
 }
-/*
- * find table with correct label for Evaluator
- * returns SimpleGraph::AdjTable* OR 0 if not found
- */
-/*
-SimpleGraph::AdjTable* SimpleGraph::getTable(uint32_t label, bool reverse) {
-    if (!reverse) {
-        if (tablePointers[label]) {
-            return tablePointers[label];
-        }
-    } else {
-        if (reverse_tablePointers[label]) {
-            return reverse_tablePointers[label];
-        }
-    }
-    return 0;
-}
- */
-/*
-void SimpleGraph::setTable(uint32_t label, AdjTable* table, bool reverse) {
-    if (!reverse) {
-        tablePointers[label] = table;
-    } else {
-        reverse_tablePointers[label] = table;
-    }
-}
-*/
 void SimpleGraph::addEdgeLL(uint32_t from, uint32_t to, uint32_t edgeLabel) {
-    addEdgeToLinkedList(from, to, edgeLabel, tableHead, false);
-    addEdgeToLinkedList(to, from, edgeLabel, reverse_tableHead, true);
+    addEdgeToLinkedList(from, to, tableHead);
+    addEdgeToLinkedList(to, from, reverse_tableHead);
 }
 
-void SimpleGraph::addEdgeToLinkedList(uint32_t from, uint32_t to, uint32_t edgeLabel, AdjTable* table, bool reverse) // add v to linked list
+void SimpleGraph::addEdgeToLinkedList(uint32_t from, uint32_t to, AdjTable* table) // add v to linked list
 {
     AdjTable *conductorTable;  // This will point to each node as it traverses the list
     AdjList *conductorList;  // This will point to each node as it traverses the list
     AdjListNode *conductorNode;  // This will point to each node as it traverses the list
     // previous
-    AdjTable *previousTable;
     AdjList *previousList;
     AdjListNode *previousNode;
 
     //labels//////////////////////////////
 
-    previousTable = table; // The conductor points to the first node
     conductorTable = table; // The conductor points to the first node
 
-    bool first_itter = true;
-    /*
-    if ( conductorTable != 0 ) {
-        while ( conductorTable->next != 0 && conductorTable->label != edgeLabel && conductorTable->label < edgeLabel) {
-            conductorTable = conductorTable->next;
-            if (!first_itter) {  //dont increase previousTable on the first itter of the while loop
-                previousTable = previousTable->next;
-            }
-            first_itter = false; // first itteration done
-        }
-    }
-    if (conductorTable->label < edgeLabel) {    // Label not found, create new label
-        conductorTable->next = new AdjTable; // Creates a node at the end of the list
-        conductorTable = conductorTable->next;    // Points to that node
-        conductorTable->next = 0;            // Prevents it from going any further
-        conductorTable->label = edgeLabel;
-        conductorTable->head = 0;
-        conductorTable->V = 0;
-        conductorTable->E = 0;
-    }
-
-    if (conductorTable->label > edgeLabel) {    // Label not found, create new label
-        previousTable->next = new AdjTable; // Creates a node at the end of the list
-        previousTable = previousTable->next;    // Points to that node
-        previousTable->next = conductorTable;            // glues the linked list back together
-        previousTable->label = edgeLabel;
-        previousTable->head = 0;
-        previousTable->V = 0;
-        previousTable->E = 0;
-        conductorTable = previousTable;
-    }
-    if (!reverse) {
-        tablePointers[conductorTable->label] = conductorTable;
-    } else {
-        reverse_tablePointers[conductorTable->label] = conductorTable;
-    }
-*/
+    bool first_itter;
     // from /////////////////////////////////////////////
-
     if (conductorTable->head == 0) { //head empty, create new AdjList
         conductorTable->head = new AdjList;
         conductorList = conductorTable->head;

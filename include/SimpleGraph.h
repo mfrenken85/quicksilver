@@ -44,8 +44,6 @@ public:
     void setNoLabels(uint32_t noLabels);
 
     // linked list
-    int getType();
-
     struct AdjListNode
     {
         uint32_t to;
@@ -70,23 +68,13 @@ public:
         struct AdjTable *next;
     };
 
-
     void addEdgeLL(uint32_t from, uint32_t to, uint32_t edgeLabel);
-    void addEdgeToLinkedList(uint32_t from, uint32_t to, uint32_t edgeLabel, AdjTable *table, bool reverse);
+    void addEdgeToLinkedList(uint32_t from, uint32_t to, AdjTable* table);
     AdjTable* createTableHead();
-    AdjTable* getTable(uint32_t label, bool reverse); // get from tablePointers
-    void setTable(uint32_t label, AdjTable* table, bool reverse); // set pointers to tablePointers
-
 
     // linked list
     AdjTable *tableHead;
     AdjTable *reverse_tableHead;
-
-    // tablePointers[label, std::make_pair[adj, rev_adj]]
-    std::map<uint32_t,AdjTable*> tablePointers;
-    std::map<uint32_t,AdjTable*> reverse_tablePointers;
-
-
 };
 
 #endif //QS_SIMPLEGRAPH_H

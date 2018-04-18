@@ -66,8 +66,8 @@ std::shared_ptr<SimpleGraph> SimpleEvaluator::project(uint32_t projectLabel, boo
 
 std::shared_ptr<SimpleGraph> SimpleEvaluator::v_project(uint32_t projectLabel, bool inverse, std::shared_ptr<SimpleGraph> &in) {
 
-    //auto out = std::make_shared<SimpleGraph>(in->getNoVertices());
-    auto out = std::make_shared<SimpleGraph>(0);
+    auto out = std::make_shared<SimpleGraph>(in->getNoVertices());
+    //auto out = std::make_shared<SimpleGraph>(0);
     out->setNoLabels(in->getNoLabels());
 
     if(!inverse) {
@@ -142,7 +142,7 @@ std::shared_ptr<SimpleGraph> SimpleEvaluator::join(std::shared_ptr<SimpleGraph> 
 
 std::shared_ptr<SimpleGraph> SimpleEvaluator::vv_join(std::shared_ptr<SimpleGraph> &left, std::shared_ptr<SimpleGraph> &right) {
 
-    auto out = std::make_shared<SimpleGraph>(left->getNoVertices());
+    auto out = std::make_shared<SimpleGraph>(0);
     out->setNoLabels(1);
 
     for(uint32_t leftSource = 0; leftSource < left->getNoVertices(); leftSource++) {
