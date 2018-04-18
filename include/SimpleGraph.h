@@ -24,10 +24,10 @@ public:
 protected:
     uint32_t V;
     uint32_t L;
-    uint32_t dataType;
 
 public:
 
+    int dataType;
     SimpleGraph() : V(0), L(0) {};
     ~SimpleGraph() = default;
     explicit SimpleGraph(uint32_t n);
@@ -44,7 +44,7 @@ public:
     void setNoLabels(uint32_t noLabels);
 
     // linked list
-    uint32_t getType();
+    int getType();
 
     struct AdjListNode
     {
@@ -71,6 +71,7 @@ public:
     };
 
 
+    void addEdgeLL(uint32_t from, uint32_t to, uint32_t edgeLabel);
     void addEdgeToLinkedList(uint32_t from, uint32_t to, uint32_t edgeLabel, AdjTable *table, bool reverse);
     AdjTable* createTableHead();
     AdjTable* getTable(uint32_t label, bool reverse); // get from tablePointers

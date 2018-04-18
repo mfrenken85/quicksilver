@@ -31,8 +31,9 @@ SimpleEstimator::SimpleEstimator(std::shared_ptr<SimpleGraph> &g){
 }
 
 void SimpleEstimator::prepare() {
-    //prepare_default();
-    prepare_linkedlist();
+    prepare_default();
+
+    //prepare_linkedlist();
 }
 
 void SimpleEstimator::prepare_linkedlist() {
