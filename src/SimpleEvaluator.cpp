@@ -79,7 +79,7 @@ std::shared_ptr<SimpleGraph> SimpleEvaluator::v_project(uint32_t projectLabel, b
                 auto target = labelTarget.second;
 
                 if (label == projectLabel)
-                    out->addEdge(source, target, label);
+                    out->addEdgeLL(source, target, label);
             }
         }
     } else {
@@ -91,7 +91,7 @@ std::shared_ptr<SimpleGraph> SimpleEvaluator::v_project(uint32_t projectLabel, b
                 auto target = labelTarget.second;
 
                 if (label == projectLabel)
-                    out->addEdge(source, target, label);
+                    out->addEdgeLL(source, target, label);
             }
         }
     }
