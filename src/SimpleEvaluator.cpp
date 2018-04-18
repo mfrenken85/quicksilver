@@ -259,7 +259,7 @@ bestPlan SimpleEvaluator::findBestPlanDynamic( std::string query,
                 std::string leftLabel = splits[0];
                 std::string rightLabel = splits[1];
                 bestPlan p;
-                p.executedQuery = "(" + leftLabel + rightLabel + ")";
+                p.executedQuery = "(" + query + ")";
                 p.cost = estimateCostOfJoin(leftLabel, rightLabel, est);
                 intermediatePlans[query] = p;
             }
@@ -367,6 +367,8 @@ bestPlan SimpleEvaluator::findBestPlanGreedy(std::string query,
 
 // preparse the input query, select the best query execution plan.
 std::string SimpleEvaluator::preParse(std::string str,std::shared_ptr<SimpleGraph> &graph, std::shared_ptr<SimpleEstimator> &est){
+
+    str.erase(std::remove_if(str.begin(), str.end(), ::isspace), str.end()); // remove spaces
     // if this query only contains 1 or 2 relation, no need to find a good plan, since this is only 1 plan possible.
     if(split(str,'/').size() <= 2)
         return  str;
@@ -391,7 +393,6 @@ std::string SimpleEvaluator::preParse(std::string str,std::shared_ptr<SimpleGrap
     }
 
     std::string queryPath = "";
-    temp.erase(std::remove_if(temp.begin(), temp.end(), ::isspace), temp.end()); // remove spaces
     for (int j = 0; j < temp.length() -1; ++j) {
         char left = temp[j];
         char right = temp[j+1];
