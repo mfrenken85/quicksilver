@@ -12,23 +12,23 @@ uint32_t SimpleGraph::getNoVertices() const {
     return V;
 }
 
-void SimpleGraph::setNoVertices(uint32_t n) {
-    if (n > 0) {
-        V = n;
-        // normal
-        adj.resize(V);
-        reverse_adj.resize(V);
-        dataType = 0;
-    } else {
-        V = 0;
-        //linked list
-        dataType = 1;
-        tableHead = createTableHead();
-        reverse_tableHead = createTableHead();
-        //tablePointers[0] = tableHead;
-        //reverse_tablePointers[0] = reverse_tableHead;
-    }
+uint32_t SimpleGraph::getType() {
+    return dataType;
+}
 
+void SimpleGraph::setNoVertices(uint32_t n) {
+    V = n;
+    // normal
+    //adj.resize(V);
+    //reverse_adj.resize(V);
+    //dataType = 0;
+
+    // linked list
+    dataType = 1;
+    tableHead = createTableHead();
+    reverse_tableHead = createTableHead();
+    tablePointers[0] = tableHead;
+    reverse_tablePointers[0] = reverse_tableHead;
 }
 
 uint32_t SimpleGraph::getNoEdges() const {
@@ -115,8 +115,9 @@ void SimpleGraph::readFromContiguousFile(const std::string &fileName) {
             uint32_t predicate = (uint32_t) std::stoul(matches[2]);
             uint32_t object = (uint32_t) std::stoul(matches[3]);
 
-            addEdge(subject, object, predicate);
-            //addEdgeLL(subject, object, predicate);
+            //addEdge(subject, object, predicate);
+            addEdgeToLinkedList(subject, object, predicate, tableHead, false);
+            addEdgeToLinkedList(object, subject, predicate, reverse_tableHead, true);
         }
     }
 
@@ -141,7 +142,6 @@ SimpleGraph::AdjTable* SimpleGraph::createTableHead() {
  * find table with correct label for Evaluator
  * returns SimpleGraph::AdjTable* OR 0 if not found
  */
-/*
 SimpleGraph::AdjTable* SimpleGraph::getTable(uint32_t label, bool reverse) {
     if (!reverse) {
         if (tablePointers[label]) {
@@ -154,19 +154,13 @@ SimpleGraph::AdjTable* SimpleGraph::getTable(uint32_t label, bool reverse) {
     }
     return 0;
 }
- */
-/*
+
 void SimpleGraph::setTable(uint32_t label, AdjTable* table, bool reverse) {
     if (!reverse) {
         tablePointers[label] = table;
     } else {
         reverse_tablePointers[label] = table;
     }
-}
-*/
-void SimpleGraph::addEdgeLL(uint32_t from, uint32_t to, uint32_t edgeLabel) {
-    addEdgeToLinkedList(from, to, edgeLabel, tableHead, false);
-    addEdgeToLinkedList(to, from, edgeLabel, reverse_tableHead, true);
 }
 
 void SimpleGraph::addEdgeToLinkedList(uint32_t from, uint32_t to, uint32_t edgeLabel, AdjTable* table, bool reverse) // add v to linked list
@@ -185,7 +179,6 @@ void SimpleGraph::addEdgeToLinkedList(uint32_t from, uint32_t to, uint32_t edgeL
     conductorTable = table; // The conductor points to the first node
 
     bool first_itter = true;
-    /*
     if ( conductorTable != 0 ) {
         while ( conductorTable->next != 0 && conductorTable->label != edgeLabel && conductorTable->label < edgeLabel) {
             conductorTable = conductorTable->next;
@@ -220,7 +213,7 @@ void SimpleGraph::addEdgeToLinkedList(uint32_t from, uint32_t to, uint32_t edgeL
     } else {
         reverse_tablePointers[conductorTable->label] = conductorTable;
     }
-*/
+
     // from /////////////////////////////////////////////
 
     if (conductorTable->head == 0) { //head empty, create new AdjList
