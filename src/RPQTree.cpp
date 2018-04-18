@@ -72,6 +72,7 @@ void RPQTree::print() {
         if(right!= nullptr) right->print();
         std::cout << ')';
     }
+
 }
 
 bool RPQTree::isConcat() {
@@ -83,7 +84,7 @@ bool RPQTree::isBinary() {
 }
 
 bool RPQTree::isUnary() {
-    return (left != nullptr && right == nullptr) || (left == nullptr && right != nullptr);
+    return left != nullptr && right == nullptr;
 }
 
 bool RPQTree::isLeaf() {

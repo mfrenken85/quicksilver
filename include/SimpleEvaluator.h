@@ -23,8 +23,6 @@ public:
     explicit SimpleEvaluator(std::shared_ptr<SimpleGraph> &g);
     ~SimpleEvaluator() = default;
 
-    void printPlans(RPQTree *q);
-
     void prepare() override ;
     cardStat evaluate(RPQTree *query) override ;
 
