@@ -99,7 +99,7 @@ std::shared_ptr<SimpleGraph> SimpleEvaluator::v_project(uint32_t projectLabel, b
     uint32_t labelcost = getCost(projectLabel, inverse, plan);
     std::string labelstring = getLabelstring(projectLabel, inverse);
 
-    if (labelcost>1000) {
+    if (labelcost>10000) {
         /*
          * store as vector
          */
@@ -217,7 +217,7 @@ std::shared_ptr<SimpleGraph> SimpleEvaluator::vv_join(std::shared_ptr<SimpleGrap
     std::string labelstring = left->getQuery()+"/"+right->getQuery();
     uint32_t labelcost = getCostConcat(labelstring, plan);
 
-    if (labelcost>10000) {
+    if (labelcost>50000) {
         /*
          * store as vector
          */
@@ -274,7 +274,7 @@ std::shared_ptr<SimpleGraph> SimpleEvaluator::lv_join(std::shared_ptr<SimpleGrap
     std::string labelstring = left->getQuery()+"/"+right->getQuery();
     uint32_t labelcost = getCostConcat(labelstring, plan);
 
-    if (labelcost>10000) {
+    if (labelcost>50000) {
         /*
          * store as vector
          */
@@ -375,7 +375,7 @@ std::shared_ptr<SimpleGraph> SimpleEvaluator::vl_join(std::shared_ptr<SimpleGrap
     std::string labelstring = left->getQuery()+"/"+right->getQuery();
     uint32_t labelcost = getCostConcat(labelstring, plan);
 
-    if (labelcost>10000) {
+    if (labelcost>50000) {
         /*
          * store as vector
          */
@@ -478,7 +478,7 @@ std::shared_ptr<SimpleGraph> SimpleEvaluator::ll_join(std::shared_ptr<SimpleGrap
     std::string labelstring = left->getQuery()+"/"+right->getQuery();
     uint32_t labelcost = getCostConcat(labelstring, plan);
 
-    if (labelcost>10000) {
+    if (labelcost>100000) {
         /*
          * store as vector
          */
