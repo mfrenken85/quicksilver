@@ -13,11 +13,6 @@ uint32_t SimpleGraph::getNoVertices() const {
 }
 
 void SimpleGraph::setNoVertices(uint32_t n) {
-<<<<<<< HEAD
-    V = n;
-    adj.resize(V);
-    reverse_adj.resize(V);
-=======
     if (n > 0) {
         V = n;
         // normal
@@ -33,8 +28,6 @@ void SimpleGraph::setNoVertices(uint32_t n) {
         //tablePointers[0] = tableHead;
         //reverse_tablePointers[0] = reverse_tableHead;
     }
-
->>>>>>> mixed_implement
 }
 
 uint32_t SimpleGraph::getNoEdges() const {
@@ -123,18 +116,10 @@ void SimpleGraph::readFromContiguousFile(const std::string &fileName) {
             uint32_t object = (uint32_t) std::stoul(matches[3]);
 
             addEdge(subject, object, predicate);
-<<<<<<< HEAD
-=======
-            //addEdgeLL(subject, object, predicate);
->>>>>>> mixed_implement
         }
     }
 
     graphFile.close();
-
-<<<<<<< HEAD
-}
-=======
 }
 
 // A C Program to demonstrate adjacency list representation of graphs
@@ -266,4 +251,3 @@ void SimpleGraph::addEdgeToLinkedList(uint32_t from, uint32_t to, AdjTable* tabl
 
 
 // Driver program to test above functions
->>>>>>> mixed_implement

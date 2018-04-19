@@ -36,6 +36,8 @@ public:
 
     void estimator_aux(RPQTree *q);
     cardStat reverse(cardStat card);
+
+    void prepare_default();
 };
 
 

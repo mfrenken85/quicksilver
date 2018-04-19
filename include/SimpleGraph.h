@@ -39,8 +39,6 @@ public:
     void setNoVertices(uint32_t n);
     void setNoLabels(uint32_t noLabels);
 
-<<<<<<< HEAD
-=======
     // linked list
     struct AdjListNode
     {
@@ -73,7 +71,6 @@ public:
     // linked list
     AdjTable *tableHead;
     AdjTable *reverse_tableHead;
->>>>>>> mixed_implement
 };
 
 #endif //QS_SIMPLEGRAPH_H

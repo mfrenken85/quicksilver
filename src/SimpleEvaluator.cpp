@@ -32,7 +32,9 @@ void SimpleEvaluator::prepare() {
 }
 
 cardStat SimpleEvaluator::computeStats(std::shared_ptr<SimpleGraph> &g) {
-
+    if (g->dataType == 1) {
+        return ll_computeStats(g);
+    }
     cardStat stats {};
 
     for(int source = 0; source < g->getNoVertices(); source++) {
@@ -44,9 +46,7 @@ cardStat SimpleEvaluator::computeStats(std::shared_ptr<SimpleGraph> &g) {
     for(int target = 0; target < g->getNoVertices(); target++) {
         if(!g->reverse_adj[target].empty()) stats.noIn++;
     }
-<<<<<<< HEAD
     g = nullptr;
-=======
 
     return stats;
 }
@@ -60,8 +60,6 @@ cardStat SimpleEvaluator::ll_computeStats(std::shared_ptr<SimpleGraph> &g) {
     stats.noOut = table->V;
     table = g->reverse_tableHead;
     stats.noIn = table->V;
-
->>>>>>> mixed_implement
     return stats;
 }
 
@@ -109,9 +107,6 @@ std::shared_ptr<SimpleGraph> SimpleEvaluator::v_project(uint32_t projectLabel, b
     return out;
 }
 
-<<<<<<< HEAD
-std::shared_ptr<SimpleGraph> SimpleEvaluator::join(std::shared_ptr<SimpleGraph> &left, std::shared_ptr<SimpleGraph> &right) {
-=======
 /*
  * ????
  */
@@ -136,7 +131,6 @@ std::shared_ptr<SimpleGraph> SimpleEvaluator::join(std::shared_ptr<SimpleGraph> 
 
             return SimpleEvaluator::vv_join(left, right);
         } else if (right->dataType == 1) {
->>>>>>> mixed_implement
 
             return SimpleEvaluator::vl_join(left, right);
         }
@@ -155,8 +149,8 @@ std::shared_ptr<SimpleGraph> SimpleEvaluator::join(std::shared_ptr<SimpleGraph> 
 }
 
 std::shared_ptr<SimpleGraph> SimpleEvaluator::vv_join(std::shared_ptr<SimpleGraph> &left, std::shared_ptr<SimpleGraph> &right) {
-
-    auto out = std::make_shared<SimpleGraph>(0);
+    //auto out = std::make_shared<SimpleGraph>(0);
+    auto out = std::make_shared<SimpleGraph>(left->getNoVertices());
     out->setNoLabels(1);
 
     for(uint32_t leftSource = 0; leftSource < left->getNoVertices(); leftSource++) {
@@ -167,7 +161,8 @@ std::shared_ptr<SimpleGraph> SimpleEvaluator::vv_join(std::shared_ptr<SimpleGrap
             for (auto rightLabelTarget : right->adj[leftTarget]) {
 
                 auto rightTarget = rightLabelTarget.second;
-                out->addEdgeLL(leftSource, rightTarget, 0);
+                //out->addEdgeLL(leftSource, rightTarget, 0);
+                out->addEdge(leftSource, rightTarget, 0);
 
             }
         }
@@ -176,8 +171,6 @@ std::shared_ptr<SimpleGraph> SimpleEvaluator::vv_join(std::shared_ptr<SimpleGrap
     return out;
 }
 
-<<<<<<< HEAD
-=======
 std::shared_ptr<SimpleGraph> SimpleEvaluator::lv_join(std::shared_ptr<SimpleGraph> &left, std::shared_ptr<SimpleGraph> &right) {
     auto out = std::make_shared<SimpleGraph>(0);
     out->setNoLabels(1);
@@ -351,7 +344,6 @@ std::shared_ptr<SimpleGraph> SimpleEvaluator::ll_join(std::shared_ptr<SimpleGrap
     return out;
 }
 
->>>>>>> mixed_implement
 std::shared_ptr<SimpleGraph> SimpleEvaluator::evaluate_aux(RPQTree *q) {
 
     // evaluate according to the AST bottom-up
@@ -441,7 +433,14 @@ std::string queryToString(RPQTree *query) {
     }
     return r;
 }
-
+/*
+cardStat SimpleEvaluator::evaluate(RPQTree *query) {
+    auto res = evaluate_aux(query);
+    return SimpleEvaluator::ll_computeStats(res);
+    //auto res = evaluate_aux(query);
+    //return SimpleEvaluator::computeStats(res);
+}
+*/
 cardStat SimpleEvaluator::evaluate(RPQTree *query) {
 
     // Since we do not want to change the program's structure,
@@ -700,12 +699,4 @@ std::string SimpleEvaluator::preParse(std::string str,std::shared_ptr<SimpleGrap
     return  queryPath;
 }
 
-<<<<<<< HEAD
-=======
-cardStat SimpleEvaluator::evaluate(RPQTree *query) {
-    auto res = evaluate_aux(query);
-    return SimpleEvaluator::ll_computeStats(res);
-    //auto res = evaluate_aux(query);
-    //return SimpleEvaluator::computeStats(res);
-}
->>>>>>> mixed_implement
+
