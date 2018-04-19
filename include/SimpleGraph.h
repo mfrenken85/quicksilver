@@ -49,6 +49,10 @@ public:
     {
         uint32_t to;
         struct AdjListNode *next; // pointer
+        ~AdjListNode()
+        {
+            delete this->next;  // this will be chained until NULL is found
+        }
     };
 
 // A structure to represent an adjacency list
@@ -57,6 +61,12 @@ public:
         uint32_t from;
         struct AdjListNode *head;  // pointer to head node of list
         struct AdjList *next;
+
+        ~AdjList()
+        {
+            delete this->head;
+            delete this->next;  // this will be chained until NULL is found
+        }
     };
 
 
@@ -67,6 +77,11 @@ public:
         uint32_t E; // no edges
         struct AdjList *head;
         struct AdjTable *next;
+        ~AdjTable()
+        {
+            delete this->head;
+            delete this->next;  // this will be chained until NULL is found
+        }
     };
 
     void addEdgeLL(uint32_t from, uint32_t to, uint32_t edgeLabel);

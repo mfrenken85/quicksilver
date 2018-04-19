@@ -318,7 +318,7 @@ std::shared_ptr<SimpleGraph> SimpleEvaluator::lv_join(std::shared_ptr<SimpleGrap
                 //break;
             }
         }
-
+        delete leftTable;
         return out;
     } else {
         /*
@@ -364,6 +364,8 @@ std::shared_ptr<SimpleGraph> SimpleEvaluator::lv_join(std::shared_ptr<SimpleGrap
                 //break;
             }
         }
+
+        delete leftTable;
         return out;
     }
 
@@ -419,6 +421,8 @@ std::shared_ptr<SimpleGraph> SimpleEvaluator::vl_join(std::shared_ptr<SimpleGrap
                 //break;
             }
         }
+
+        delete rightTable;
         return out;
     } else {
         /*
@@ -464,6 +468,8 @@ std::shared_ptr<SimpleGraph> SimpleEvaluator::vl_join(std::shared_ptr<SimpleGrap
                 //break;
             }
         }
+
+        delete rightTable;
         return out;
     }
 
@@ -560,6 +566,8 @@ std::shared_ptr<SimpleGraph> SimpleEvaluator::ll_join(std::shared_ptr<SimpleGrap
             }
         }
 
+        delete leftTable;
+        delete rightTable;
         return out;
     } else {
         /*
@@ -643,6 +651,8 @@ std::shared_ptr<SimpleGraph> SimpleEvaluator::ll_join(std::shared_ptr<SimpleGrap
             }
         }
 
+        delete leftTable;
+        delete rightTable;
         return out;
     }
 
