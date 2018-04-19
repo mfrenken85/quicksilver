@@ -77,6 +77,14 @@ void SimpleGraph::setNoLabels(uint32_t noLabels) {
     L = noLabels;
 }
 
+std::string SimpleGraph::getQuery() const {
+    return dataQuery;
+}
+
+void SimpleGraph::setQuery(std::string s) {
+    dataQuery = s;
+}
+
 void SimpleGraph::addEdge(uint32_t from, uint32_t to, uint32_t edgeLabel) {
     if(from >= V || to >= V || edgeLabel >= L)
         throw std::runtime_error(std::string("Edge data out of bounds: ") +

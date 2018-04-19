@@ -19,8 +19,6 @@ struct bestPlan {
 };
 
 class SimpleEvaluator : public Evaluator {
-    static uint32_t noVert;
-
     std::shared_ptr<SimpleGraph> graph;
     std::shared_ptr<SimpleEstimator> est;
 
@@ -47,18 +45,18 @@ public:
 
     void attachEstimator(std::shared_ptr<SimpleEstimator> &e);
 
-    std::shared_ptr<SimpleGraph> evaluate_aux(RPQTree *q);
+    std::shared_ptr<SimpleGraph> evaluate_aux(RPQTree *q, std::map<std::string,bestPlan> plan, uint32_t noV);
 
 
-    static std::shared_ptr<SimpleGraph> project(uint32_t label, bool inverse, std::shared_ptr<SimpleGraph> &g);
-    static std::shared_ptr<SimpleGraph> v_project(uint32_t label, bool inverse, std::shared_ptr<SimpleGraph> &g);
-    static std::shared_ptr<SimpleGraph> ll_project(uint32_t label, bool inverse, std::shared_ptr<SimpleGraph> &g);
+    static std::shared_ptr<SimpleGraph> project(uint32_t label, bool inverse, std::shared_ptr<SimpleGraph> &g, std::map<std::string,bestPlan> plan, uint32_t noV);
+    static std::shared_ptr<SimpleGraph> v_project(uint32_t label, bool inverse, std::shared_ptr<SimpleGraph> &g, std::map<std::string,bestPlan> plan, uint32_t noV);
+    static std::shared_ptr<SimpleGraph> ll_project(uint32_t label, bool inverse, std::shared_ptr<SimpleGraph> &g, std::map<std::string,bestPlan> plan, uint32_t noV);
 
-    static std::shared_ptr<SimpleGraph> join(std::shared_ptr<SimpleGraph> &left, std::shared_ptr<SimpleGraph> &right);
-    static std::shared_ptr<SimpleGraph> vv_join(std::shared_ptr<SimpleGraph> &left, std::shared_ptr<SimpleGraph> &right);
-    static std::shared_ptr<SimpleGraph> vl_join(std::shared_ptr<SimpleGraph> &left, std::shared_ptr<SimpleGraph> &right);
-    static std::shared_ptr<SimpleGraph> lv_join(std::shared_ptr<SimpleGraph> &left, std::shared_ptr<SimpleGraph> &right);
-    static std::shared_ptr<SimpleGraph> ll_join(std::shared_ptr<SimpleGraph> &left, std::shared_ptr<SimpleGraph> &right);
+    static std::shared_ptr<SimpleGraph> join(std::shared_ptr<SimpleGraph> &left, std::shared_ptr<SimpleGraph> &right, std::map<std::string,bestPlan> plan, uint32_t noV);
+    static std::shared_ptr<SimpleGraph> vv_join(std::shared_ptr<SimpleGraph> &left, std::shared_ptr<SimpleGraph> &right, std::map<std::string,bestPlan> plan, uint32_t noV);
+    static std::shared_ptr<SimpleGraph> vl_join(std::shared_ptr<SimpleGraph> &left, std::shared_ptr<SimpleGraph> &right, std::map<std::string,bestPlan> plan, uint32_t noV);
+    static std::shared_ptr<SimpleGraph> lv_join(std::shared_ptr<SimpleGraph> &left, std::shared_ptr<SimpleGraph> &right, std::map<std::string,bestPlan> plan, uint32_t noV);
+    static std::shared_ptr<SimpleGraph> ll_join(std::shared_ptr<SimpleGraph> &left, std::shared_ptr<SimpleGraph> &right, std::map<std::string,bestPlan> plan, uint32_t noV);
 
 
     static cardStat computeStats(std::shared_ptr<SimpleGraph> &g);

@@ -63,54 +63,119 @@ cardStat SimpleEvaluator::ll_computeStats(std::shared_ptr<SimpleGraph> &g) {
     return stats;
 }
 
-std::shared_ptr<SimpleGraph> SimpleEvaluator::project(uint32_t projectLabel, bool inverse, std::shared_ptr<SimpleGraph> &in) {
-    // get type of graph, select proper project
-    if (in->dataType == 0){
-        return SimpleEvaluator::v_project(projectLabel, inverse, in);
-    } else {
-        return SimpleEvaluator::ll_project(projectLabel, inverse, in);
-    }
+template <typename T>
+std::string NumberToString ( T Number )
+{
+    std::ostringstream ss;
+    ss << Number;
+    return ss.str();
+}
+uint32_t getCost(uint32_t l, bool i, std::map<std::string,bestPlan> p) {
+    std::string s = (i) ? NumberToString(l)+"-" : NumberToString(l)+"+";
+    return p[s].cost;
 }
 
-std::shared_ptr<SimpleGraph> SimpleEvaluator::v_project(uint32_t projectLabel, bool inverse, std::shared_ptr<SimpleGraph> &in) {
+uint32_t getCostConcat(std::string l, std::map<std::string,bestPlan> p) {
+    return p[l].cost;
+}
 
-    auto out = std::make_shared<SimpleGraph>(in->getNoVertices());
-    //auto out = std::make_shared<SimpleGraph>(0);
-    out->setNoLabels(in->getNoLabels());
+std::string getLabelstring(uint32_t l, bool i) {
+    std::string s = (i) ? NumberToString(l)+"-" : NumberToString(l)+"+";
+    return s;
+}
 
-    if(!inverse) {
-        // going forward
-        for(uint32_t source = 0; source < in->getNoVertices(); source++) {
-            for (auto labelTarget : in->adj[source]) {
-
-                auto label = labelTarget.first;
-                auto target = labelTarget.second;
-
-                if (label == projectLabel)
-                    out->addEdge(source, target, label);
-            }
-        }
+std::shared_ptr<SimpleGraph> SimpleEvaluator::project(uint32_t projectLabel, bool inverse, std::shared_ptr<SimpleGraph> &in, std::map<std::string,bestPlan> plan, uint32_t noV) {
+    // get type of graph, select proper project
+    if (in->dataType == 0){
+        return SimpleEvaluator::v_project(projectLabel, inverse, in, plan, noV);
     } else {
-        // going backward
-        for(uint32_t source = 0; source < in->getNoVertices(); source++) {
-            for (auto labelTarget : in->reverse_adj[source]) {
-
-                auto label = labelTarget.first;
-                auto target = labelTarget.second;
-
-                if (label == projectLabel)
-                    out->addEdge(source, target, label);
-            }
-        }
+        return SimpleEvaluator::ll_project(projectLabel, inverse, in, plan, noV);
     }
 
-    return out;
+    return nullptr;
+}
+
+std::shared_ptr<SimpleGraph> SimpleEvaluator::v_project(uint32_t projectLabel, bool inverse, std::shared_ptr<SimpleGraph> &in, std::map<std::string,bestPlan> plan, uint32_t noV) {
+    uint32_t labelcost = getCost(projectLabel, inverse, plan);
+    std::string labelstring = getLabelstring(projectLabel, inverse);
+
+    if (labelcost>1000) {
+        /*
+         * store as vector
+         */
+        auto out = std::make_shared<SimpleGraph>(noV);
+        out->setNoLabels(in->getNoLabels());
+        out->setQuery(labelstring);
+
+        if(!inverse) {
+            // going forward
+            for(uint32_t source = 0; source < in->getNoVertices(); source++) {
+                for (auto labelTarget : in->adj[source]) {
+
+                    auto label = labelTarget.first;
+                    auto target = labelTarget.second;
+
+                    if (label == projectLabel)
+                        out->addEdge(source, target, label);
+                }
+            }
+        } else {
+            // going backward
+            for(uint32_t source = 0; source < in->getNoVertices(); source++) {
+                for (auto labelTarget : in->reverse_adj[source]) {
+
+                    auto label = labelTarget.first;
+                    auto target = labelTarget.second;
+
+                    if (label == projectLabel)
+                        out->addEdge(source, target, label);
+                }
+            }
+        }
+        return out;
+    } else{
+        /*
+         * store as ll
+         */
+        auto out = std::make_shared<SimpleGraph>(0);
+        out->setNoLabels(1);
+        out->setQuery(labelstring);
+
+        if(!inverse) {
+            // going forward
+            for(uint32_t source = 0; source < in->getNoVertices(); source++) {
+                for (auto labelTarget : in->adj[source]) {
+
+                    auto label = labelTarget.first;
+                    auto target = labelTarget.second;
+
+                    if (label == projectLabel)
+                        out->addEdgeLL(source, target, label);
+                }
+            }
+        } else {
+            // going backward
+            for(uint32_t source = 0; source < in->getNoVertices(); source++) {
+                for (auto labelTarget : in->reverse_adj[source]) {
+
+                    auto label = labelTarget.first;
+                    auto target = labelTarget.second;
+
+                    if (label == projectLabel)
+                        out->addEdgeLL(source, target, label);
+                }
+            }
+        }
+        return out;
+    }
+
+    return nullptr;
 }
 
 /*
  * ????
  */
-std::shared_ptr<SimpleGraph> SimpleEvaluator::ll_project(uint32_t projectLabel, bool inverse, std::shared_ptr<SimpleGraph> &in) {
+std::shared_ptr<SimpleGraph> SimpleEvaluator::ll_project(uint32_t projectLabel, bool inverse, std::shared_ptr<SimpleGraph> &in, std::map<std::string,bestPlan> plan, uint32_t noV) {
     // create new graph class, will only contain 1 table, hence table is reffered to as label 0
     auto out = std::make_shared<SimpleGraph>(0);
     out->setNoLabels(1);
@@ -121,7 +186,7 @@ std::shared_ptr<SimpleGraph> SimpleEvaluator::ll_project(uint32_t projectLabel, 
     return out;
 }
 
-std::shared_ptr<SimpleGraph> SimpleEvaluator::join(std::shared_ptr<SimpleGraph> &left, std::shared_ptr<SimpleGraph> &right) {
+std::shared_ptr<SimpleGraph> SimpleEvaluator::join(std::shared_ptr<SimpleGraph> &left, std::shared_ptr<SimpleGraph> &right, std::map<std::string,bestPlan> plan, uint32_t noV) {
     // get type of graph, select proper join
     // v = 0, ll = 1
 
@@ -129,222 +194,463 @@ std::shared_ptr<SimpleGraph> SimpleEvaluator::join(std::shared_ptr<SimpleGraph> 
 
         if (right->dataType == 0){
 
-            return SimpleEvaluator::vv_join(left, right);
+            return SimpleEvaluator::vv_join(left, right, plan, noV);
         } else if (right->dataType == 1) {
 
-            return SimpleEvaluator::vl_join(left, right);
+            return SimpleEvaluator::vl_join(left, right, plan, noV);
         }
     } else if (left->dataType == 1) {
 
         if (right->dataType == 0){
 
-            return SimpleEvaluator::lv_join(left, right);
+            return SimpleEvaluator::lv_join(left, right, plan, noV);
         } else if (right->dataType == 1) {
 
-            return SimpleEvaluator::ll_join(left, right);
-        }
-    }
-    auto out = std::make_shared<SimpleGraph>();
-    return out;
-}
-
-std::shared_ptr<SimpleGraph> SimpleEvaluator::vv_join(std::shared_ptr<SimpleGraph> &left, std::shared_ptr<SimpleGraph> &right) {
-    //auto out = std::make_shared<SimpleGraph>(0);
-    auto out = std::make_shared<SimpleGraph>(left->getNoVertices());
-    out->setNoLabels(1);
-
-    for(uint32_t leftSource = 0; leftSource < left->getNoVertices(); leftSource++) {
-        for (auto labelTarget : left->adj[leftSource]) {
-
-            int leftTarget = labelTarget.second;
-            // try to join the left target with right source
-            for (auto rightLabelTarget : right->adj[leftTarget]) {
-
-                auto rightTarget = rightLabelTarget.second;
-                //out->addEdgeLL(leftSource, rightTarget, 0);
-                out->addEdge(leftSource, rightTarget, 0);
-
-            }
+            return SimpleEvaluator::ll_join(left, right, plan, noV);
         }
     }
 
-    return out;
+    return nullptr;
 }
 
-std::shared_ptr<SimpleGraph> SimpleEvaluator::lv_join(std::shared_ptr<SimpleGraph> &left, std::shared_ptr<SimpleGraph> &right) {
-    auto out = std::make_shared<SimpleGraph>(0);
-    out->setNoLabels(1);
+std::shared_ptr<SimpleGraph> SimpleEvaluator::vv_join(std::shared_ptr<SimpleGraph> &left, std::shared_ptr<SimpleGraph> &right, std::map<std::string,bestPlan> plan, uint32_t noV) {
+    std::string labelstring = left->getQuery()+"/"+right->getQuery();
+    uint32_t labelcost = getCostConcat(labelstring, plan);
 
-    SimpleGraph::AdjTable *leftTable;  // This will point to each node as it traverses the list
-    SimpleGraph::AdjList *leftList;  // This will point to each node as it traverses the list
-    SimpleGraph::AdjListNode *leftNode;  // This will point to each node as it traverses the list
-    // previous
+    if (labelcost>10000) {
+        /*
+         * store as vector
+         */
+        auto out = std::make_shared<SimpleGraph>(noV);
+        out->setNoLabels(1);
+        out->setQuery(labelstring);
 
-    leftTable = left->reverse_tableHead; //take reverse of left table for easy itteration
+        for(uint32_t leftSource = 0; leftSource < left->getNoVertices(); leftSource++) {
+            for (auto labelTarget : left->adj[leftSource]) {
 
-    if (leftTable->head == 0) {
-        return out;
-    }
-    leftList = leftTable->head;
-    bool exhausted = false;
-    bool exhausted1;
-    while (!exhausted) { // match inverse right from to normal left from
-        for (auto rightLabelTarget : right->adj[leftList->from]) {
-            leftNode = leftList->head;
-            exhausted1 = false;
-            while (!exhausted1) { // loop inverse left to
-                auto rightTarget = rightLabelTarget.second;
-                auto leftTarget = leftNode->to;
-                out->addEdgeLL(leftTarget, rightTarget, 0);
-                if (leftNode->next != 0) {
-                    leftNode = leftNode->next;
-                } else {
-                    exhausted1 = true;
-                    //break;
+                int leftTarget = labelTarget.second;
+                // try to join the left target with right source
+                for (auto rightLabelTarget : right->adj[leftTarget]) {
+
+                    auto rightTarget = rightLabelTarget.second;
+                    //out->addEdgeLL(leftSource, rightTarget, 0);
+                    out->addEdge(leftSource, rightTarget, 0);
+
                 }
             }
-
         }
-        if (leftList->next != 0) {
-            leftList = leftList->next;
-        } else {
-            exhausted = true;
-            //break;
-        }
-    }
 
-    return out;
-}
-
-std::shared_ptr<SimpleGraph> SimpleEvaluator::vl_join(std::shared_ptr<SimpleGraph> &left, std::shared_ptr<SimpleGraph> &right) {
-    auto out = std::make_shared<SimpleGraph>(0);
-    out->setNoLabels(1);
-
-    SimpleGraph::AdjTable *rightTable;  // This will point to each node as it traverses the list
-    SimpleGraph::AdjList *rightList;  // This will point to each node as it traverses the list
-    SimpleGraph::AdjListNode *rightNode;  // This will point to each node as it traverses the list
-    // previous
-
-    rightTable = right->tableHead; //take reverse of left table for easy itteration
-
-    if (rightTable->head == 0) {
         return out;
-    }
-    rightList = rightTable->head;
-    bool exhausted = false;
-    bool exhausted1;
-    while (!exhausted) { // match inverse right from to normal left from
-        for (auto leftLabelTarget : left->reverse_adj[rightList->from]) {
-            rightNode = rightList->head;
-            exhausted1 = false;
-            while (!exhausted1) { // loop inverse left to
-                auto leftTarget = leftLabelTarget.second;
-                auto rightTarget = rightNode->to;
-                out->addEdgeLL(leftTarget, rightTarget, 0);
-                if (rightNode->next != 0) {
-                    rightNode = rightNode->next;
-                } else {
-                    exhausted1 = true;
-                    //break;
+    } else {
+        /*
+         * store as ll
+         */
+        auto out = std::make_shared<SimpleGraph>(0);
+        out->setNoLabels(1);
+
+        for(uint32_t leftSource = 0; leftSource < left->getNoVertices(); leftSource++) {
+            for (auto labelTarget : left->adj[leftSource]) {
+
+                int leftTarget = labelTarget.second;
+                // try to join the left target with right source
+                for (auto rightLabelTarget : right->adj[leftTarget]) {
+
+                    auto rightTarget = rightLabelTarget.second;
+                    out->addEdgeLL(leftSource, rightTarget, 0);
+
                 }
             }
+        }
 
-        }
-        if (rightList->next != 0) {
-            rightList = rightList->next;
-        } else {
-            exhausted = true;
-            //break;
-        }
+        return out;
     }
-    return out;
+
+
+    return nullptr;
+
+}
+
+std::shared_ptr<SimpleGraph> SimpleEvaluator::lv_join(std::shared_ptr<SimpleGraph> &left, std::shared_ptr<SimpleGraph> &right, std::map<std::string,bestPlan> plan, uint32_t noV) {
+    std::string labelstring = left->getQuery()+"/"+right->getQuery();
+    uint32_t labelcost = getCostConcat(labelstring, plan);
+
+    if (labelcost>10000) {
+        /*
+         * store as vector
+         */
+        auto out = std::make_shared<SimpleGraph>(noV);
+        out->setNoLabels(1);
+
+        SimpleGraph::AdjTable *leftTable;  // This will point to each node as it traverses the list
+        SimpleGraph::AdjList *leftList;  // This will point to each node as it traverses the list
+        SimpleGraph::AdjListNode *leftNode;  // This will point to each node as it traverses the list
+        // previous
+
+        leftTable = left->reverse_tableHead; //take reverse of left table for easy itteration
+
+        if (leftTable->head == 0) {
+            return out;
+        }
+        leftList = leftTable->head;
+        bool exhausted = false;
+        bool exhausted1;
+        while (!exhausted) { // match inverse right from to normal left from
+            for (auto rightLabelTarget : right->adj[leftList->from]) {
+                leftNode = leftList->head;
+                exhausted1 = false;
+                while (!exhausted1) { // loop inverse left to
+                    auto rightTarget = rightLabelTarget.second;
+                    auto leftTarget = leftNode->to;
+                    out->addEdge(leftTarget, rightTarget, 0);
+                    if (leftNode->next != 0) {
+                        leftNode = leftNode->next;
+                    } else {
+                        exhausted1 = true;
+                        //break;
+                    }
+                }
+
+            }
+            if (leftList->next != 0) {
+                leftList = leftList->next;
+            } else {
+                exhausted = true;
+                //break;
+            }
+        }
+
+        return out;
+    } else {
+        /*
+         * store as ll
+         */
+        auto out = std::make_shared<SimpleGraph>(0);
+        out->setNoLabels(1);
+
+        SimpleGraph::AdjTable *leftTable;  // This will point to each node as it traverses the list
+        SimpleGraph::AdjList *leftList;  // This will point to each node as it traverses the list
+        SimpleGraph::AdjListNode *leftNode;  // This will point to each node as it traverses the list
+        // previous
+
+        leftTable = left->reverse_tableHead; //take reverse of left table for easy itteration
+
+        if (leftTable->head == 0) {
+            return out;
+        }
+        leftList = leftTable->head;
+        bool exhausted = false;
+        bool exhausted1;
+        while (!exhausted) { // match inverse right from to normal left from
+            for (auto rightLabelTarget : right->adj[leftList->from]) {
+                leftNode = leftList->head;
+                exhausted1 = false;
+                while (!exhausted1) { // loop inverse left to
+                    auto rightTarget = rightLabelTarget.second;
+                    auto leftTarget = leftNode->to;
+                    out->addEdgeLL(leftTarget, rightTarget, 0);
+                    if (leftNode->next != 0) {
+                        leftNode = leftNode->next;
+                    } else {
+                        exhausted1 = true;
+                        //break;
+                    }
+                }
+
+            }
+            if (leftList->next != 0) {
+                leftList = leftList->next;
+            } else {
+                exhausted = true;
+                //break;
+            }
+        }
+        return out;
+    }
+
+
+    return nullptr;
+}
+
+std::shared_ptr<SimpleGraph> SimpleEvaluator::vl_join(std::shared_ptr<SimpleGraph> &left, std::shared_ptr<SimpleGraph> &right, std::map<std::string,bestPlan> plan, uint32_t noV) {
+    std::string labelstring = left->getQuery()+"/"+right->getQuery();
+    uint32_t labelcost = getCostConcat(labelstring, plan);
+
+    if (labelcost>10000) {
+        /*
+         * store as vector
+         */
+        auto out = std::make_shared<SimpleGraph>(noV);
+        out->setNoLabels(1);
+
+        SimpleGraph::AdjTable *rightTable;  // This will point to each node as it traverses the list
+        SimpleGraph::AdjList *rightList;  // This will point to each node as it traverses the list
+        SimpleGraph::AdjListNode *rightNode;  // This will point to each node as it traverses the list
+        // previous
+
+        rightTable = right->tableHead; //take reverse of left table for easy itteration
+
+        if (rightTable->head == 0) {
+            return out;
+        }
+        rightList = rightTable->head;
+        bool exhausted = false;
+        bool exhausted1;
+        while (!exhausted) { // match inverse right from to normal left from
+            for (auto leftLabelTarget : left->reverse_adj[rightList->from]) {
+                rightNode = rightList->head;
+                exhausted1 = false;
+                while (!exhausted1) { // loop inverse left to
+                    auto leftTarget = leftLabelTarget.second;
+                    auto rightTarget = rightNode->to;
+                    out->addEdge(leftTarget, rightTarget, 0);
+                    if (rightNode->next != 0) {
+                        rightNode = rightNode->next;
+                    } else {
+                        exhausted1 = true;
+                        //break;
+                    }
+                }
+
+            }
+            if (rightList->next != 0) {
+                rightList = rightList->next;
+            } else {
+                exhausted = true;
+                //break;
+            }
+        }
+        return out;
+    } else {
+        /*
+         * store as ll
+         */
+        auto out = std::make_shared<SimpleGraph>(0);
+        out->setNoLabels(1);
+
+        SimpleGraph::AdjTable *rightTable;  // This will point to each node as it traverses the list
+        SimpleGraph::AdjList *rightList;  // This will point to each node as it traverses the list
+        SimpleGraph::AdjListNode *rightNode;  // This will point to each node as it traverses the list
+        // previous
+
+        rightTable = right->tableHead; //take reverse of left table for easy itteration
+
+        if (rightTable->head == 0) {
+            return out;
+        }
+        rightList = rightTable->head;
+        bool exhausted = false;
+        bool exhausted1;
+        while (!exhausted) { // match inverse right from to normal left from
+            for (auto leftLabelTarget : left->reverse_adj[rightList->from]) {
+                rightNode = rightList->head;
+                exhausted1 = false;
+                while (!exhausted1) { // loop inverse left to
+                    auto leftTarget = leftLabelTarget.second;
+                    auto rightTarget = rightNode->to;
+                    out->addEdgeLL(leftTarget, rightTarget, 0);
+                    if (rightNode->next != 0) {
+                        rightNode = rightNode->next;
+                    } else {
+                        exhausted1 = true;
+                        //break;
+                    }
+                }
+
+            }
+            if (rightList->next != 0) {
+                rightList = rightList->next;
+            } else {
+                exhausted = true;
+                //break;
+            }
+        }
+        return out;
+    }
+
+
+    return nullptr;
 }
 
 /*
  * ?????
  */
-std::shared_ptr<SimpleGraph> SimpleEvaluator::ll_join(std::shared_ptr<SimpleGraph> &left, std::shared_ptr<SimpleGraph> &right) {
-    auto out = std::make_shared<SimpleGraph>(0);
-    out->setNoLabels(1);
+std::shared_ptr<SimpleGraph> SimpleEvaluator::ll_join(std::shared_ptr<SimpleGraph> &left, std::shared_ptr<SimpleGraph> &right, std::map<std::string,bestPlan> plan, uint32_t noV) {
+    std::string labelstring = left->getQuery()+"/"+right->getQuery();
+    uint32_t labelcost = getCostConcat(labelstring, plan);
 
-    SimpleGraph::AdjTable *leftTable;  // This will point to each node as it traverses the list
-    SimpleGraph::AdjList *leftList;  // This will point to each node as it traverses the list
-    SimpleGraph::AdjListNode *leftNode;  // This will point to each node as it traverses the list
-    // previous
-    SimpleGraph::AdjTable *rightTable;
-    SimpleGraph::AdjList *rightList;
-    SimpleGraph::AdjListNode *rightNode;
+    if (labelcost>10000) {
+        /*
+         * store as vector
+         */
 
-    leftTable = left->reverse_tableHead; //take reverse of left table for easy itteration
-    rightTable = right->tableHead;
+        auto out = std::make_shared<SimpleGraph>(noV);
+        out->setNoLabels(1);
 
-    if (leftTable->head == 0 || rightTable->head == 0) {
-        return out;
-    }
-    leftList = leftTable->head;
-    rightList = rightTable->head;
-    bool exhausted = false;
-    bool exhausted1;
-    bool exhausted2;
-    while (!exhausted) { // match inverse right from to normal left from
-        if (leftList->from == rightList->from) {
-            leftNode = leftList->head;
-            // make cartesian product
-            exhausted1 = false;
-            while (!exhausted1) { // loop inverse left to
-                rightNode = rightList->head;
-                exhausted2 = false;
-                while (!exhausted2) { // loop normal right to
-                    // always store as label 0
-                    out->addEdgeLL(leftNode->to, rightNode->to, 0);
-                    if (rightNode->next != 0) {
-                        rightNode = rightNode->next;
+        SimpleGraph::AdjTable *leftTable;  // This will point to each node as it traverses the list
+        SimpleGraph::AdjList *leftList;  // This will point to each node as it traverses the list
+        SimpleGraph::AdjListNode *leftNode;  // This will point to each node as it traverses the list
+        // previous
+        SimpleGraph::AdjTable *rightTable;
+        SimpleGraph::AdjList *rightList;
+        SimpleGraph::AdjListNode *rightNode;
+
+        leftTable = left->reverse_tableHead; //take reverse of left table for easy itteration
+        rightTable = right->tableHead;
+
+        if (leftTable->head == 0 || rightTable->head == 0) {
+            return out;
+        }
+        leftList = leftTable->head;
+        rightList = rightTable->head;
+        bool exhausted = false;
+        bool exhausted1;
+        bool exhausted2;
+        while (!exhausted) { // match inverse right from to normal left from
+            if (leftList->from == rightList->from) {
+                leftNode = leftList->head;
+                // make cartesian product
+                exhausted1 = false;
+                while (!exhausted1) { // loop inverse left to
+                    rightNode = rightList->head;
+                    exhausted2 = false;
+                    while (!exhausted2) { // loop normal right to
+                        // always store as label 0
+                        out->addEdge(leftNode->to, rightNode->to, 0);
+                        if (rightNode->next != 0) {
+                            rightNode = rightNode->next;
+                        } else {
+                            exhausted2 = true;
+                            //break;
+                        }
+                    }
+                    if (leftNode->next != 0) {
+                        leftNode = leftNode->next;
                     } else {
-                        exhausted2 = true;
+                        exhausted1 = true;
                         //break;
                     }
                 }
-                if (leftNode->next != 0) {
-                    leftNode = leftNode->next;
+                if (rightList->next != 0) {
+                    rightList = rightList->next;
                 } else {
-                    exhausted1 = true;
+                    exhausted = true;
+                    //break;
+                }
+                if (leftList->next != 0) {
+                    leftList = leftList->next;
+                } else {
+                    exhausted = true;
                     //break;
                 }
             }
-            if (rightList->next != 0) {
-                rightList = rightList->next;
-            } else {
-                exhausted = true;
-                //break;
-            }
-            if (leftList->next != 0) {
-                leftList = leftList->next;
-            } else {
-                exhausted = true;
-                //break;
-            }
-        }
-        if (leftList->from < rightList->from) {
-            if (leftList->next != 0) {
-                leftList = leftList->next;
-            } else {
-                exhausted = true;
-                //break;
-            }
-        } else if (leftList->from > rightList->from) {
-            if (rightList->next != 0) {
-                rightList = rightList->next;
-            } else {
-                exhausted = true;
-                //break;
+            if (leftList->from < rightList->from) {
+                if (leftList->next != 0) {
+                    leftList = leftList->next;
+                } else {
+                    exhausted = true;
+                    //break;
+                }
+            } else if (leftList->from > rightList->from) {
+                if (rightList->next != 0) {
+                    rightList = rightList->next;
+                } else {
+                    exhausted = true;
+                    //break;
+                }
             }
         }
+
+        return out;
+    } else {
+        /*
+         * store as ll
+         */
+
+        auto out = std::make_shared<SimpleGraph>(0);
+        out->setNoLabels(1);
+
+        SimpleGraph::AdjTable *leftTable;  // This will point to each node as it traverses the list
+        SimpleGraph::AdjList *leftList;  // This will point to each node as it traverses the list
+        SimpleGraph::AdjListNode *leftNode;  // This will point to each node as it traverses the list
+        // previous
+        SimpleGraph::AdjTable *rightTable;
+        SimpleGraph::AdjList *rightList;
+        SimpleGraph::AdjListNode *rightNode;
+
+        leftTable = left->reverse_tableHead; //take reverse of left table for easy itteration
+        rightTable = right->tableHead;
+
+        if (leftTable->head == 0 || rightTable->head == 0) {
+            return out;
+        }
+        leftList = leftTable->head;
+        rightList = rightTable->head;
+        bool exhausted = false;
+        bool exhausted1;
+        bool exhausted2;
+        while (!exhausted) { // match inverse right from to normal left from
+            if (leftList->from == rightList->from) {
+                leftNode = leftList->head;
+                // make cartesian product
+                exhausted1 = false;
+                while (!exhausted1) { // loop inverse left to
+                    rightNode = rightList->head;
+                    exhausted2 = false;
+                    while (!exhausted2) { // loop normal right to
+                        // always store as label 0
+                        out->addEdgeLL(leftNode->to, rightNode->to, 0);
+                        if (rightNode->next != 0) {
+                            rightNode = rightNode->next;
+                        } else {
+                            exhausted2 = true;
+                            //break;
+                        }
+                    }
+                    if (leftNode->next != 0) {
+                        leftNode = leftNode->next;
+                    } else {
+                        exhausted1 = true;
+                        //break;
+                    }
+                }
+                if (rightList->next != 0) {
+                    rightList = rightList->next;
+                } else {
+                    exhausted = true;
+                    //break;
+                }
+                if (leftList->next != 0) {
+                    leftList = leftList->next;
+                } else {
+                    exhausted = true;
+                    //break;
+                }
+            }
+            if (leftList->from < rightList->from) {
+                if (leftList->next != 0) {
+                    leftList = leftList->next;
+                } else {
+                    exhausted = true;
+                    //break;
+                }
+            } else if (leftList->from > rightList->from) {
+                if (rightList->next != 0) {
+                    rightList = rightList->next;
+                } else {
+                    exhausted = true;
+                    //break;
+                }
+            }
+        }
+
+        return out;
     }
 
-    return out;
+
+    return nullptr;
 }
 
-std::shared_ptr<SimpleGraph> SimpleEvaluator::evaluate_aux(RPQTree *q) {
+std::shared_ptr<SimpleGraph> SimpleEvaluator::evaluate_aux(RPQTree *q, std::map<std::string,bestPlan> plan, uint32_t noV) {
 
     // evaluate according to the AST bottom-up
 
@@ -369,17 +675,17 @@ std::shared_ptr<SimpleGraph> SimpleEvaluator::evaluate_aux(RPQTree *q) {
             return nullptr;
         }
 
-        return SimpleEvaluator::project(label, inverse, graph);
+        return SimpleEvaluator::project(label, inverse, graph, plan, noV);
     }
 
     if(q->isConcat()) {
 
         // evaluate the children
-        auto leftGraph = SimpleEvaluator::evaluate_aux(q->left);
-        auto rightGraph = SimpleEvaluator::evaluate_aux(q->right);
+        auto leftGraph = SimpleEvaluator::evaluate_aux(q->left, plan, noV);
+        auto rightGraph = SimpleEvaluator::evaluate_aux(q->right, plan, noV);
 
         // join left with right
-        return SimpleEvaluator::join(leftGraph, rightGraph);
+        return SimpleEvaluator::join(leftGraph, rightGraph, plan, noV);
     }
 
     return nullptr;
@@ -485,7 +791,7 @@ cardStat SimpleEvaluator::evaluate(RPQTree *query) {
     */
 
     start = std::chrono::steady_clock::now();
-    auto res = evaluate_aux(newQuery);
+    auto res = evaluate_aux(newQuery, cachedBestPlans, graph->getNoVertices());
     end = std::chrono::steady_clock::now();
     std::cout << "Time to execute the best execution plan is: "
               << std::chrono::duration<double, std::milli>(end - start).count() << " ms" << std::endl;

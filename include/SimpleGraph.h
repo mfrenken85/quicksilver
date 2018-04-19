@@ -23,6 +23,7 @@ protected:
 
 public:
 
+    std::string dataQuery;
     int dataType;
     SimpleGraph() : V(0), L(0) {};
     ~SimpleGraph() = default;
@@ -38,6 +39,10 @@ public:
 
     void setNoVertices(uint32_t n);
     void setNoLabels(uint32_t noLabels);
+
+
+    std::string getQuery() const;
+    void setQuery(std::string s);
 
     // linked list
     struct AdjListNode
