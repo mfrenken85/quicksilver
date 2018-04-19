@@ -48,7 +48,7 @@ public:
     struct AdjListNode
     {
         uint32_t to;
-        struct AdjListNode *next; // pointer
+        AdjListNode *next; // pointer
         ~AdjListNode()
         {
             delete this->next;  // this will be chained until NULL is found
@@ -59,8 +59,8 @@ public:
     struct AdjList
     {
         uint32_t from;
-        struct AdjListNode *head;  // pointer to head node of list
-        struct AdjList *next;
+        AdjListNode *head;  // pointer to head node of list
+        AdjList *next;
 
         ~AdjList()
         {
@@ -75,8 +75,8 @@ public:
         uint32_t label; // table name
         uint32_t V; // no vertices
         uint32_t E; // no edges
-        struct AdjList *head;
-        struct AdjTable *next;
+        AdjList *head;
+        AdjTable *next;
         ~AdjTable()
         {
             delete this->head;
