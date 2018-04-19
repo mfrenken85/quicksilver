@@ -221,7 +221,7 @@ std::shared_ptr<SimpleGraph> SimpleEvaluator::vv_join(std::shared_ptr<SimpleGrap
     std::string labelstring = left->getQuery()+"/"+right->getQuery();
     uint32_t labelcost = getCostConcat(labelstring, plan);
 
-    if (labelcost>10000) {
+    if (labelcost>50000) {
 
         std::cout << "vv_join vec " << labelstring << " : " << labelcost << "\n";
         /*
@@ -329,6 +329,7 @@ std::shared_ptr<SimpleGraph> SimpleEvaluator::lv_join(std::shared_ptr<SimpleGrap
                 //break;
             }
         }
+        leftTable = left->reverse_tableHead;
         delete leftTable;
         return out;
     } else {
@@ -378,6 +379,8 @@ std::shared_ptr<SimpleGraph> SimpleEvaluator::lv_join(std::shared_ptr<SimpleGrap
             }
         }
 
+
+        leftTable = left->reverse_tableHead;
         delete leftTable;
         return out;
     }
@@ -437,6 +440,7 @@ std::shared_ptr<SimpleGraph> SimpleEvaluator::vl_join(std::shared_ptr<SimpleGrap
             }
         }
 
+        rightList = rightTable->head;
         delete rightTable;
         return out;
     } else {
@@ -486,6 +490,7 @@ std::shared_ptr<SimpleGraph> SimpleEvaluator::vl_join(std::shared_ptr<SimpleGrap
             }
         }
 
+        rightList = rightTable->head;
         delete rightTable;
         return out;
     }
@@ -584,8 +589,11 @@ std::shared_ptr<SimpleGraph> SimpleEvaluator::ll_join(std::shared_ptr<SimpleGrap
                 }
             }
         }
-
+        leftTable = left->reverse_tableHead; //take reverse of left table for easy itteration
+        rightTable = right->tableHead;
         delete leftTable;
+
+
         delete rightTable;
         return out;
     } else {
@@ -671,8 +679,11 @@ std::shared_ptr<SimpleGraph> SimpleEvaluator::ll_join(std::shared_ptr<SimpleGrap
                 }
             }
         }
-
+        leftTable = left->reverse_tableHead; //take reverse of left table for easy itteration
+        rightTable = right->tableHead;
         delete leftTable;
+
+
         delete rightTable;
         return out;
     }

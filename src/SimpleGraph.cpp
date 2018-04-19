@@ -7,6 +7,11 @@
 SimpleGraph::SimpleGraph(uint32_t n)   {
     setNoVertices(n);
 }
+//SimpleGraph::~SimpleGraph() {
+    // clean the memory.
+    //delete tableHead;
+    //delete reverse_tableHead;
+//}
 
 uint32_t SimpleGraph::getNoVertices() const {
     return V;
