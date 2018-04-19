@@ -99,7 +99,7 @@ std::shared_ptr<SimpleGraph> SimpleEvaluator::v_project(uint32_t projectLabel, b
     uint32_t labelcost = getCost(projectLabel, inverse, plan);
     std::string labelstring = getLabelstring(projectLabel, inverse);
 
-    if (labelcost>1000) {
+    if (labelcost>0) {
         std::cout << "v_project vec " << labelstring << " : " << labelcost << "\n";
 
         /*
@@ -221,7 +221,7 @@ std::shared_ptr<SimpleGraph> SimpleEvaluator::vv_join(std::shared_ptr<SimpleGrap
     std::string labelstring = left->getQuery()+"/"+right->getQuery();
     uint32_t labelcost = getCostConcat(labelstring, plan);
 
-    if (labelcost>50000) {
+    if (labelcost>0) {
 
         std::cout << "vv_join vec " << labelstring << " : " << labelcost << "\n";
         /*
