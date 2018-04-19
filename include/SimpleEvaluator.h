@@ -46,9 +46,23 @@ public:
 
     void attachEstimator(std::shared_ptr<SimpleEstimator> &e);
 
+    std::shared_ptr<SimpleGraph> ll_evaluate_aux(RPQTree *q); // needs to be removed
     std::shared_ptr<SimpleGraph> evaluate_aux(RPQTree *q);
+<<<<<<< HEAD
     static std::shared_ptr<SimpleGraph> project(uint32_t label, bool inverse, std::shared_ptr<SimpleGraph> &g);
     static std::shared_ptr<SimpleGraph> join(std::shared_ptr<SimpleGraph> &left, std::shared_ptr<SimpleGraph> &right);
+=======
+
+    static std::shared_ptr<SimpleGraph> project(uint32_t label, bool inverse, std::shared_ptr<SimpleGraph> &g);
+    static std::shared_ptr<SimpleGraph> v_project(uint32_t label, bool inverse, std::shared_ptr<SimpleGraph> &g);
+    static std::shared_ptr<SimpleGraph> ll_project(uint32_t label, bool inverse, std::shared_ptr<SimpleGraph> &g);
+
+    static std::shared_ptr<SimpleGraph> join(std::shared_ptr<SimpleGraph> &left, std::shared_ptr<SimpleGraph> &right);
+    static std::shared_ptr<SimpleGraph> vv_join(std::shared_ptr<SimpleGraph> &left, std::shared_ptr<SimpleGraph> &right);
+    static std::shared_ptr<SimpleGraph> vl_join(std::shared_ptr<SimpleGraph> &left, std::shared_ptr<SimpleGraph> &right);
+    static std::shared_ptr<SimpleGraph> lv_join(std::shared_ptr<SimpleGraph> &left, std::shared_ptr<SimpleGraph> &right);
+    static std::shared_ptr<SimpleGraph> ll_join(std::shared_ptr<SimpleGraph> &left, std::shared_ptr<SimpleGraph> &right);
+>>>>>>> mixed_implement
 
     static cardStat computeStats(std::shared_ptr<SimpleGraph> &g);
 

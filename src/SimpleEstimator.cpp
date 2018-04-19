@@ -31,6 +31,29 @@ SimpleEstimator::SimpleEstimator(std::shared_ptr<SimpleGraph> &g){
 }
 
 void SimpleEstimator::prepare() {
+<<<<<<< HEAD
+=======
+    prepare_default();
+
+    //prepare_linkedlist();
+}
+
+void SimpleEstimator::prepare_linkedlist() {
+    // calc for linked list
+
+    SimpleGraph::AdjTable *conductorTable;
+    conductorTable = graph->tableHead;
+
+    if ( conductorTable != 0 ) {
+        histLabels[conductorTable->label] = conductorTable->E;
+        histOut[conductorTable->label] = conductorTable->V;
+        while ( conductorTable->next != 0) {
+            conductorTable = conductorTable->next;
+            histLabels[conductorTable->label] = conductorTable->E;
+            histOut[conductorTable->label] = conductorTable->V;
+        }
+    }
+>>>>>>> mixed_implement
 
     // do your prep here
 

@@ -23,6 +23,7 @@ protected:
 
 public:
 
+    int dataType;
     SimpleGraph() : V(0), L(0) {};
     ~SimpleGraph() = default;
     explicit SimpleGraph(uint32_t n);
@@ -38,6 +39,41 @@ public:
     void setNoVertices(uint32_t n);
     void setNoLabels(uint32_t noLabels);
 
+<<<<<<< HEAD
+=======
+    // linked list
+    struct AdjListNode
+    {
+        uint32_t to;
+        struct AdjListNode *next; // pointer
+    };
+
+// A structure to represent an adjacency list
+    struct AdjList
+    {
+        uint32_t from;
+        struct AdjListNode *head;  // pointer to head node of list
+        struct AdjList *next;
+    };
+
+
+    struct AdjTable
+    {
+        uint32_t label; // table name
+        uint32_t V; // no vertices
+        uint32_t E; // no edges
+        struct AdjList *head;
+        struct AdjTable *next;
+    };
+
+    void addEdgeLL(uint32_t from, uint32_t to, uint32_t edgeLabel);
+    void addEdgeToLinkedList(uint32_t from, uint32_t to, AdjTable* table);
+    AdjTable* createTableHead();
+
+    // linked list
+    AdjTable *tableHead;
+    AdjTable *reverse_tableHead;
+>>>>>>> mixed_implement
 };
 
 #endif //QS_SIMPLEGRAPH_H
