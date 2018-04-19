@@ -221,7 +221,7 @@ std::shared_ptr<SimpleGraph> SimpleEvaluator::vv_join(std::shared_ptr<SimpleGrap
     std::string labelstring = left->getQuery()+"/"+right->getQuery();
     uint32_t labelcost = getCostConcat(labelstring, plan);
 
-    if (labelcost>50000) {
+    if (labelcost>10000) {
 
         std::cout << "vv_join vec " << labelstring << " : " << labelcost << "\n";
         /*
@@ -254,6 +254,7 @@ std::shared_ptr<SimpleGraph> SimpleEvaluator::vv_join(std::shared_ptr<SimpleGrap
          */
         auto out = std::make_shared<SimpleGraph>(0);
         out->setNoLabels(1);
+        out->setQuery(labelstring);
 
         for(uint32_t leftSource = 0; leftSource < left->getNoVertices(); leftSource++) {
             for (auto labelTarget : left->adj[leftSource]) {
@@ -281,7 +282,7 @@ std::shared_ptr<SimpleGraph> SimpleEvaluator::lv_join(std::shared_ptr<SimpleGrap
     std::string labelstring = left->getQuery()+"/"+right->getQuery();
     uint32_t labelcost = getCostConcat(labelstring, plan);
 
-    if (labelcost>50000) {
+    if (labelcost>200000) {
 
         std::cout << "lv_join vec " << labelstring << " : " << labelcost << "\n";
         /*
@@ -289,6 +290,7 @@ std::shared_ptr<SimpleGraph> SimpleEvaluator::lv_join(std::shared_ptr<SimpleGrap
          */
         auto out = std::make_shared<SimpleGraph>(noV);
         out->setNoLabels(1);
+        out->setQuery(labelstring);
 
         SimpleGraph::AdjTable *leftTable;  // This will point to each node as it traverses the list
         SimpleGraph::AdjList *leftList;  // This will point to each node as it traverses the list
@@ -336,6 +338,7 @@ std::shared_ptr<SimpleGraph> SimpleEvaluator::lv_join(std::shared_ptr<SimpleGrap
         std::cout << "lv_join ll " << labelstring << " : " << labelcost << "\n";
         auto out = std::make_shared<SimpleGraph>(0);
         out->setNoLabels(1);
+        out->setQuery(labelstring);
 
         SimpleGraph::AdjTable *leftTable;  // This will point to each node as it traverses the list
         SimpleGraph::AdjList *leftList;  // This will point to each node as it traverses the list
@@ -387,13 +390,14 @@ std::shared_ptr<SimpleGraph> SimpleEvaluator::vl_join(std::shared_ptr<SimpleGrap
     std::string labelstring = left->getQuery()+"/"+right->getQuery();
     uint32_t labelcost = getCostConcat(labelstring, plan);
 
-    if (labelcost>50000) {
+    if (labelcost>200000) {
         /*
          * store as vector
          */
         std::cout << "vl_join vec " << labelstring << " : " << labelcost << "\n";
         auto out = std::make_shared<SimpleGraph>(noV);
         out->setNoLabels(1);
+        out->setQuery(labelstring);
 
         SimpleGraph::AdjTable *rightTable;  // This will point to each node as it traverses the list
         SimpleGraph::AdjList *rightList;  // This will point to each node as it traverses the list
@@ -442,6 +446,7 @@ std::shared_ptr<SimpleGraph> SimpleEvaluator::vl_join(std::shared_ptr<SimpleGrap
         std::cout << "vl_join ll " << labelstring << " : " << labelcost << "\n";
         auto out = std::make_shared<SimpleGraph>(0);
         out->setNoLabels(1);
+        out->setQuery(labelstring);
 
         SimpleGraph::AdjTable *rightTable;  // This will point to each node as it traverses the list
         SimpleGraph::AdjList *rightList;  // This will point to each node as it traverses the list
@@ -496,7 +501,7 @@ std::shared_ptr<SimpleGraph> SimpleEvaluator::ll_join(std::shared_ptr<SimpleGrap
     std::string labelstring = left->getQuery()+"/"+right->getQuery();
     uint32_t labelcost = getCostConcat(labelstring, plan);
 
-    if (labelcost>100000) {
+    if (labelcost>400000) {
         /*
          * store as vector
          */
@@ -504,6 +509,7 @@ std::shared_ptr<SimpleGraph> SimpleEvaluator::ll_join(std::shared_ptr<SimpleGrap
 
         auto out = std::make_shared<SimpleGraph>(noV);
         out->setNoLabels(1);
+        out->setQuery(labelstring);
 
         SimpleGraph::AdjTable *leftTable;  // This will point to each node as it traverses the list
         SimpleGraph::AdjList *leftList;  // This will point to each node as it traverses the list
@@ -590,6 +596,7 @@ std::shared_ptr<SimpleGraph> SimpleEvaluator::ll_join(std::shared_ptr<SimpleGrap
 
         auto out = std::make_shared<SimpleGraph>(0);
         out->setNoLabels(1);
+        out->setQuery(labelstring);
 
         SimpleGraph::AdjTable *leftTable;  // This will point to each node as it traverses the list
         SimpleGraph::AdjList *leftList;  // This will point to each node as it traverses the list
