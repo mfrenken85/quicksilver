@@ -99,8 +99,9 @@ std::shared_ptr<SimpleGraph> SimpleEvaluator::v_project(uint32_t projectLabel, b
     uint32_t labelcost = getCost(projectLabel, inverse, plan);
     std::string labelstring = getLabelstring(projectLabel, inverse);
 
-    if (labelcost>0) {
-        std::cout << "v_project vec " << labelstring << " : " << labelcost << "\n";
+    if (labelcost>1000) {
+        std::cout << "v_project vec " << labelstring << " : " << labelcost;
+        auto start = std::chrono::steady_clock::now();
 
         /*
          * store as vector
@@ -134,10 +135,14 @@ std::shared_ptr<SimpleGraph> SimpleEvaluator::v_project(uint32_t projectLabel, b
                 }
             }
         }
+        auto end = std::chrono::steady_clock::now();
+        std::cout << ", execution time: "
+                  << std::chrono::duration<double, std::milli>(end - start).count() << " ms" << std::endl;
         return out;
     } else{
 
-        std::cout << "v_project ll " << labelstring << " : " << labelcost << "\n";
+        std::cout << "v_project ll " << labelstring << " : " << labelcost;
+        auto start = std::chrono::steady_clock::now();
         /*
          * store as ll
          */
@@ -170,6 +175,9 @@ std::shared_ptr<SimpleGraph> SimpleEvaluator::v_project(uint32_t projectLabel, b
                 }
             }
         }
+        auto end = std::chrono::steady_clock::now();
+        std::cout << ", execution time: "
+                  << std::chrono::duration<double, std::milli>(end - start).count() << " ms, actual size: " << out->tableHead->E << std::endl;
         return out;
     }
 
@@ -195,9 +203,7 @@ std::shared_ptr<SimpleGraph> SimpleEvaluator::join(std::shared_ptr<SimpleGraph> 
     // v = 0, ll = 1
 
     if (left->dataType == 0){
-
         if (right->dataType == 0){
-
             return SimpleEvaluator::vv_join(left, right, plan, noV);
         } else if (right->dataType == 1) {
 
@@ -220,10 +226,20 @@ std::shared_ptr<SimpleGraph> SimpleEvaluator::join(std::shared_ptr<SimpleGraph> 
 std::shared_ptr<SimpleGraph> SimpleEvaluator::vv_join(std::shared_ptr<SimpleGraph> &left, std::shared_ptr<SimpleGraph> &right, std::map<std::string,bestPlan> plan, uint32_t noV) {
     std::string labelstring = left->getQuery()+"/"+right->getQuery();
     uint32_t labelcost = getCostConcat(labelstring, plan);
+    bool usevec = true;
+    if (labelcost<50000) {
+        usevec = false;
+    } else {
+        uint32_t nleft = left->getNoDistinctEdges();
+        uint32_t nright = right->getNoDistinctEdges();
+        if (nleft*nright < 10000000 || nleft<1000 || nright<1000) { //nleft<500 || nright<500
+            usevec = false;
+        }
+    }
+    if (usevec) { //labelcost>50000 || (left->getNoEdges()>100 && left->getNoEdges() >100 )
 
-    if (labelcost>0) {
-
-        std::cout << "vv_join vec " << labelstring << " : " << labelcost << "\n";
+        std::cout << "vv_join vec " << labelstring << " : " << labelcost;
+        auto start = std::chrono::steady_clock::now();
         /*
          * store as vector
          */
@@ -246,9 +262,13 @@ std::shared_ptr<SimpleGraph> SimpleEvaluator::vv_join(std::shared_ptr<SimpleGrap
             }
         }
 
+        auto end = std::chrono::steady_clock::now();
+        std::cout << ", execution time: "
+                  << std::chrono::duration<double, std::milli>(end - start).count() << " ms" << std::endl;
         return out;
     } else {
-        std::cout << "vv_join ll " << labelstring << " : " << labelcost << "\n";
+        std::cout << "vv_join ll " << labelstring << " : " << labelcost;
+        auto start = std::chrono::steady_clock::now();
         /*
          * store as ll
          */
@@ -270,6 +290,9 @@ std::shared_ptr<SimpleGraph> SimpleEvaluator::vv_join(std::shared_ptr<SimpleGrap
             }
         }
 
+        auto end = std::chrono::steady_clock::now();
+        std::cout << ", execution time: "
+                  << std::chrono::duration<double, std::milli>(end - start).count() << " ms, actual size: " << out->tableHead->E << std::endl;
         return out;
     }
 
@@ -282,9 +305,10 @@ std::shared_ptr<SimpleGraph> SimpleEvaluator::lv_join(std::shared_ptr<SimpleGrap
     std::string labelstring = left->getQuery()+"/"+right->getQuery();
     uint32_t labelcost = getCostConcat(labelstring, plan);
 
-    if (labelcost>200000) {
+    if (labelcost>1000000) {
 
-        std::cout << "lv_join vec " << labelstring << " : " << labelcost << "\n";
+        std::cout << "lv_join vec " << labelstring << " : " << labelcost;
+        auto start = std::chrono::steady_clock::now();
         /*
          * store as vector
          */
@@ -331,12 +355,18 @@ std::shared_ptr<SimpleGraph> SimpleEvaluator::lv_join(std::shared_ptr<SimpleGrap
         }
         leftTable = left->reverse_tableHead;
         delete leftTable;
+        auto end = std::chrono::steady_clock::now();
+        std::cout << ", execution time: "
+                  << std::chrono::duration<double, std::milli>(end - start).count() << " ms" << std::endl;
         return out;
     } else {
         /*
          * store as ll
          */
-        std::cout << "lv_join ll " << labelstring << " : " << labelcost << "\n";
+        std::cout << "lv_join ll " << labelstring << " : " << labelcost;
+        auto start = std::chrono::steady_clock::now();
+
+
         auto out = std::make_shared<SimpleGraph>(0);
         out->setNoLabels(1);
         out->setQuery(labelstring);
@@ -382,6 +412,9 @@ std::shared_ptr<SimpleGraph> SimpleEvaluator::lv_join(std::shared_ptr<SimpleGrap
 
         leftTable = left->reverse_tableHead;
         delete leftTable;
+        auto end = std::chrono::steady_clock::now();
+        std::cout << ", execution time: "
+                  << std::chrono::duration<double, std::milli>(end - start).count() << " ms, actual size: " << out->tableHead->E << std::endl;
         return out;
     }
 
@@ -393,11 +426,15 @@ std::shared_ptr<SimpleGraph> SimpleEvaluator::vl_join(std::shared_ptr<SimpleGrap
     std::string labelstring = left->getQuery()+"/"+right->getQuery();
     uint32_t labelcost = getCostConcat(labelstring, plan);
 
-    if (labelcost>200000) {
+    if (labelcost>1000000) {
         /*
          * store as vector
          */
-        std::cout << "vl_join vec " << labelstring << " : " << labelcost << "\n";
+        std::cout << "vl_join vec " << labelstring << " : " << labelcost;
+
+        auto start = std::chrono::steady_clock::now();
+
+
         auto out = std::make_shared<SimpleGraph>(noV);
         out->setNoLabels(1);
         out->setQuery(labelstring);
@@ -442,12 +479,18 @@ std::shared_ptr<SimpleGraph> SimpleEvaluator::vl_join(std::shared_ptr<SimpleGrap
 
         rightList = rightTable->head;
         delete rightTable;
+        auto end = std::chrono::steady_clock::now();
+        std::cout << ", execution time: "
+                  << std::chrono::duration<double, std::milli>(end - start).count() << " ms" << std::endl;
         return out;
     } else {
         /*
          * store as ll
          */
-        std::cout << "vl_join ll " << labelstring << " : " << labelcost << "\n";
+        std::cout << "vl_join ll " << labelstring << " : " << labelcost;
+
+        auto start = std::chrono::steady_clock::now();
+
         auto out = std::make_shared<SimpleGraph>(0);
         out->setNoLabels(1);
         out->setQuery(labelstring);
@@ -490,8 +533,11 @@ std::shared_ptr<SimpleGraph> SimpleEvaluator::vl_join(std::shared_ptr<SimpleGrap
             }
         }
 
-        rightList = rightTable->head;
+        rightTable = right->tableHead;
         delete rightTable;
+        auto end = std::chrono::steady_clock::now();
+        std::cout << ", execution time: "
+                  << std::chrono::duration<double, std::milli>(end - start).count() << " ms, actual size: " << out->tableHead->E << std::endl;
         return out;
     }
 
@@ -506,11 +552,13 @@ std::shared_ptr<SimpleGraph> SimpleEvaluator::ll_join(std::shared_ptr<SimpleGrap
     std::string labelstring = left->getQuery()+"/"+right->getQuery();
     uint32_t labelcost = getCostConcat(labelstring, plan);
 
-    if (labelcost>400000) {
+    if (labelcost>10000000) {
         /*
          * store as vector
          */
-        std::cout << "ll_join vec " << labelstring << " : " << labelcost << "\n";
+        std::cout << "ll_join vec " << labelstring << " : " << labelcost;
+
+        auto start = std::chrono::steady_clock::now();
 
         auto out = std::make_shared<SimpleGraph>(noV);
         out->setNoLabels(1);
@@ -595,12 +643,16 @@ std::shared_ptr<SimpleGraph> SimpleEvaluator::ll_join(std::shared_ptr<SimpleGrap
 
 
         delete rightTable;
+        auto end = std::chrono::steady_clock::now();
+        std::cout << ", execution time: "
+                  << std::chrono::duration<double, std::milli>(end - start).count() << " ms" << std::endl;
         return out;
     } else {
         /*
          * store as ll
          */
-        std::cout << "ll_join ll " << labelstring << " : " << labelcost << "\n";
+        std::cout << "ll_join ll " << labelstring << " : " << labelcost;
+        auto start = std::chrono::steady_clock::now();
 
         auto out = std::make_shared<SimpleGraph>(0);
         out->setNoLabels(1);
@@ -681,9 +733,11 @@ std::shared_ptr<SimpleGraph> SimpleEvaluator::ll_join(std::shared_ptr<SimpleGrap
         }
         leftTable = left->reverse_tableHead; //take reverse of left table for easy itteration
         rightTable = right->tableHead;
+        auto end = std::chrono::steady_clock::now();
+        std::cout << ", execution time: "
+                  << std::chrono::duration<double, std::milli>(end - start).count() << " ms, actual size: " << out->tableHead->E << std::endl;
+
         delete leftTable;
-
-
         delete rightTable;
         return out;
     }
@@ -799,15 +853,15 @@ cardStat SimpleEvaluator::evaluate(RPQTree *query) {
     // Hence, we implemented it in this way.
 
     // executing with best plan selected by dynamic programming.
-    auto start = std::chrono::steady_clock::now();
+    //auto start = std::chrono::steady_clock::now();
     auto querypath = queryToString(query);
     querypath = preParse(querypath, graph, est);
     RPQTree *newQuery = RPQTree::strToTree(querypath);
-    auto end = std::chrono::steady_clock::now();
-    auto timeToGetPlan =  std::chrono::duration<double, std::milli>(end - start).count();
-    std::cout << "\nTime to select the best execution plan is: "
-              << timeToGetPlan << " ms" << std::endl;
-    std::cout << "The best execution plan is: " + querypath << std::endl;
+    //auto end = std::chrono::steady_clock::now();
+    //auto timeToGetPlan =  std::chrono::duration<double, std::milli>(end - start).count();
+    //std::cout << "\nTime to select the best execution plan is: "
+              //<< timeToGetPlan << " ms" << std::endl;
+    //std::cout << "The best execution plan is: " + querypath << std::endl;
 
     /*
     // for testing purpose
@@ -832,11 +886,11 @@ cardStat SimpleEvaluator::evaluate(RPQTree *query) {
     myfile.close();
     */
 
-    start = std::chrono::steady_clock::now();
+    //start = std::chrono::steady_clock::now();
     auto res = evaluate_aux(newQuery, cachedBestPlans, graph->getNoVertices());
-    end = std::chrono::steady_clock::now();
-    std::cout << "Time to execute the best execution plan is: "
-              << std::chrono::duration<double, std::milli>(end - start).count() << " ms" << std::endl;
+    //end = std::chrono::steady_clock::now();
+    //std::cout << "Time to execute the best execution plan is: "
+              //<< std::chrono::duration<double, std::milli>(end - start).count() << " ms" << std::endl;
 
     /*
     // for testing purpose.
