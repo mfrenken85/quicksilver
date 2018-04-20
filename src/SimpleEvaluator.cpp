@@ -232,7 +232,7 @@ std::shared_ptr<SimpleGraph> SimpleEvaluator::vv_join(std::shared_ptr<SimpleGrap
     } else {
         uint32_t nleft = left->getNoDistinctEdges();
         uint32_t nright = right->getNoDistinctEdges();
-        if (nleft*nright < 10000000 || nleft<1000 || nright<1000) { //nleft<500 || nright<500
+        if (nleft*nright < 1000000 || nleft<1000 || nright<1000) { //nleft<500 || nright<500
             usevec = false;
         }
     }
