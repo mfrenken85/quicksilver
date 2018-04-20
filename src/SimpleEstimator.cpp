@@ -31,9 +31,12 @@ SimpleEstimator::SimpleEstimator(std::shared_ptr<SimpleGraph> &g){
 }
 
 void SimpleEstimator::prepare() {
+    prepare_default();
 
+}
+
+void SimpleEstimator::prepare_default() {
     // do your prep here
-
     for(int i = 0; i < graph->getNoVertices(); i++) {
         if (!graph->adj[i].empty()){
             for (int j = 0; j < graph->adj[i].size(); j++ ) {
@@ -59,10 +62,8 @@ void SimpleEstimator::prepare() {
             setLabels.clear();
         }
     }
-
     for (int i = 0; i < histLabels.size(); ++i) {
         labelCardStats.emplace(i , cardStat { histOut[i], histLabels[i], histIn[i]} );
-        std::cout << "Label " << i << " appeared " << histLabels[i]  << " times. with out:" << histOut[i] << " and in:" << histIn[i] << std::endl;
     }
 }
 

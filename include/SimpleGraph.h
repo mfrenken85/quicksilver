@@ -23,6 +23,8 @@ protected:
 
 public:
 
+    std::string dataQuery;
+    int dataType;
     SimpleGraph() : V(0), L(0) {};
     ~SimpleGraph() = default;
     explicit SimpleGraph(uint32_t n);
@@ -38,6 +40,57 @@ public:
     void setNoVertices(uint32_t n);
     void setNoLabels(uint32_t noLabels);
 
+
+    std::string getQuery() const;
+    void setQuery(std::string s);
+
+    // linked list
+    struct AdjListNode
+    {
+        uint32_t to;
+        AdjListNode *next; // pointer
+        ~AdjListNode()
+        {
+            delete this->next;  // this will be chained until NULL is found
+        }
+    };
+
+// A structure to represent an adjacency list
+    struct AdjList
+    {
+        uint32_t from;
+        AdjListNode *head;  // pointer to head node of list
+        AdjList *next;
+
+        ~AdjList()
+        {
+            delete this->head;
+            delete this->next;  // this will be chained until NULL is found
+        }
+    };
+
+
+    struct AdjTable
+    {
+        uint32_t label; // table name
+        uint32_t V; // no vertices
+        uint32_t E; // no edges
+        AdjList *head;
+        AdjTable *next;
+        ~AdjTable()
+        {
+            delete this->head;
+            delete this->next;  // this will be chained until NULL is found
+        }
+    };
+
+    void addEdgeLL(uint32_t from, uint32_t to, uint32_t edgeLabel);
+    void addEdgeToLinkedList(uint32_t from, uint32_t to, AdjTable* table);
+    AdjTable* createTableHead();
+
+    // linked list
+    AdjTable *tableHead;
+    AdjTable *reverse_tableHead;
 };
 
 #endif //QS_SIMPLEGRAPH_H

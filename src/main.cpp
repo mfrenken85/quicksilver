@@ -148,7 +148,7 @@ int evaluatorBench(std::string &graphFile, std::string &queriesFile) {
         RPQTree *queryTree = RPQTree::strToTree(query.path);
         std::cout << "Parsed query tree: ";
         queryTree->print();
-
+        std::cout << "\n";
         // perform the evaluation
         start = std::chrono::steady_clock::now();
         auto actual = ev->evaluate(queryTree);
