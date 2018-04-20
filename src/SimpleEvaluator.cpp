@@ -279,7 +279,7 @@ cardStat SimpleEvaluator::evaluate(RPQTree *query) {
 
 // We simply do the estimation on the entire 2 subtrees.
 // The ideal case would be that, the estimator will only estimate the join cost of two subtrees.
-// i.e, oin the right most element of the left subtree with the left most element of the right subtree.
+// i.e, join the right most element of the left subtree with the left most element of the right subtree.
 // Instead of estimating the entire 2 subtrees.
 // But since estimation is pretty cheap, and this is easier to implement, it is implemented in this way.
 uint32_t estimateCostOfJoin(std::string left, std::string right, std::shared_ptr<SimpleEstimator> &est){
